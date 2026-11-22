@@ -1,0 +1,19 @@
+review_id,date,source,business,rating,review
+LAP-0203,2026-10-05,Online store (simulated),Dell XPS 13,4,"Gorgeous design, the glass palm rest and slim bezels make it look very premium."
+LAP-0204,2026-10-10,Retail site (simulated),Dell XPS 13,2,"The invisible haptic trackpad is hard to use, I can't feel where it starts and ends."
+LAP-0202,2026-10-12,Retail site (simulated),Dell XPS 13,3,The touch function row looks cool but I keep hitting it by accident and miss physical keys.
+LAP-0205,2026-10-14,Online store (simulated),Dell XPS 13,3,"Only two USB-C ports and no headphone jack, which is a strange choice for a work laptop."
+LAP-0206,2026-10-16,Online store (simulated),Dell XPS 13,4,Battery easily lasts a full workday of documents and browsing.
+LAP-0201,2026-10-20,Online store (simulated),Dell XPS 13,5,"The OLED display is stunning, colours pop and text is razor sharp."
+LAP-0207,2026-10-23,Retail site (simulated),Dell XPS 13,4,Keyboard is edge to edge and nice to type on once you get used to the flat keys.
+LAP-0208,2026-10-27,Retail site (simulated),Dell XPS 13,3,It gets warm under load and the fan becomes noticeable during video calls.
+LAP-0209,2026-11-04,Online store (simulated),Dell XPS 13,5,"Very compact and light, fits in any bag. Great for travel."
+LAP-0210,2026-11-05,Retail site (simulated),Dell XPS 13,3,"Webcam is average, fine for meetings but nothing special."
+LAP-0218,2026-11-06,Online store (simulated),Dell XPS 13,4,"Lovely machine overall, but the missing headphone jack still annoys me."
+LAP-0212,2026-11-08,Online store (simulated),Dell XPS 13,2,"Too expensive for what you get, similar specs are much cheaper elsewhere."
+LAP-0217,2026-11-08,Online store (simulated),Dell XPS 13,3,Battery drops quickly with the OLED at full brightness.
+LAP-0211,2026-11-09,Retail site (simulated),Dell XPS 13,4,Speakers are clear and loud enough for a small room.
+LAP-0213,2026-11-12,Online store (simulated),Dell XPS 13,4,Performance is snappy for office work and light photo editing.
+LAP-0214,2026-11-13,Retail site (simulated),Dell XPS 13,3,The screen is glossy and quite reflective near windows.
+LAP-0215,2026-11-14,Online store (simulated),Dell XPS 13,5,"Build quality is excellent, the aluminium chassis feels rock solid."
+LAP-0216,2026-11-14,Retail site (simulated),Dell XPS 13,4,Dell support was quick to arrange a home visit for a loose key.

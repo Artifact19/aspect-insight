@@ -1,0 +1,47 @@
+[
+  {
+    "strategy": "Greedy",
+    "ACOS_F1": 47.18303449531264,
+    "ACOS_P": 46.99057287889775,
+    "ACOS_R": 47.37707914458051,
+    "AOS_F1": 63.178047223994895,
+    "malformed_segments": 1.0,
+    "ms_per_sentence": 35.52770840300855
+  },
+  {
+    "strategy": "Beam search (4 beams)",
+    "ACOS_F1": 47.218208092485554,
+    "ACOS_P": 46.670237457596855,
+    "ACOS_R": 47.77919941509779,
+    "AOS_F1": 63.235959120918864,
+    "malformed_segments": 1.0,
+    "ms_per_sentence": 45.30646784343043
+  },
+  {
+    "strategy": "Sampling, T=0.7, top-p=0.9",
+    "ACOS_F1": 46.421100500227375,
+    "ACOS_P": 46.198406951484436,
+    "ACOS_R": 46.64595138000365,
+    "AOS_F1": 62.80510018214937,
+    "malformed_segments": 1.0,
+    "ms_per_sentence": 36.260206184205884
+  },
+  {
+    "strategy": "Sampling, T=1.0, top-p=1.0",
+    "ACOS_F1": 44.79157206429933,
+    "ACOS_P": 44.51263537906137,
+    "ACOS_R": 45.07402668616341,
+    "AOS_F1": 61.50627615062761,
+    "malformed_segments": 2.0,
+    "ms_per_sentence": 36.78231613842765
+  },
+  {
+    "strategy": "Self-consistency (5 samples, T=0.7, majority vote)",
+    "ACOS_F1": 47.69501901493368,
+    "ACOS_P": 48.4180790960452,
+    "ACOS_R": 46.99323706817766,
+    "AOS_F1": 63.154960981047935,
+    "malformed_segments": 1.0,
+    "ms_per_sentence": 183.30950138124902
+  }
+]

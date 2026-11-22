@@ -1,0 +1,24 @@
+review_id,date,source,business,rating,review
+LAP-0002,2026-09-01,Retail site (simulated),Novix Aero 14,4,"The screen is bright and sharp, great for working outdoors. Only two USB-C ports though, had to buy a dongle."
+LAP-0004,2026-09-01,Retail site (simulated),Novix Aero 14,4,"Super light, I carry it everywhere. Webcam is grainy in low light which is annoying for calls."
+LAP-0010,2026-09-03,Retail site (simulated),Novix Aero 14,3,Performance is good for office work but it throttles under heavy load and the bottom gets hot.
+LAP-0006,2026-09-08,Retail site (simulated),Novix Aero 14,5,Setup took five minutes and it boots in seconds. Battery easily lasts 12 hours.
+LAP-0011,2026-09-09,Online store (simulated),Novix Aero 14,5,Battery and screen are both excellent. Best laptop I've owned.
+LAP-0012,2026-09-10,Online store (simulated),Novix Aero 14,4,The aluminium body feels solid. Wish it had an HDMI port.
+LAP-0009,2026-09-12,Online store (simulated),Novix Aero 14,4,Great value compared to similar ultrabooks. Display colours are accurate for photo editing.
+LAP-0003,2026-09-13,Retail site (simulated),Novix Aero 14,5,"Keyboard is a joy to type on, nice travel and quiet. Build feels premium for the price."
+LAP-0007,2026-09-13,Online store (simulated),Novix Aero 14,2,Customer support took 9 days to reply about a dead pixel. The laptop itself is fine.
+LAP-0001,2026-09-19,Retail site (simulated),Novix Aero 14,5,"Battery life is insane, I get a full workday of coding and meetings on one charge."
+LAP-0005,2026-09-24,Retail site (simulated),Novix Aero 14,3,Good laptop but the fan gets loud when compiling or gaming. Normal use is silent.
+LAP-0008,2026-09-24,Online store (simulated),Novix Aero 14,4,Speakers are surprisingly loud and clear. Trackpad is smooth and precise.
+LAP-0017,2026-10-01,Retail site (simulated),Novix Aero 14,3,Decent machine. Only two ports is really limiting for a work laptop.
+LAP-0014,2026-10-02,Retail site (simulated),Novix Aero 14,4,"Fast SSD, apps open instantly. Fan noise under load is the only real downside."
+LAP-0023,2026-10-10,Online store (simulated),Novix Aero 14,4,Keyboard and screen are top notch. Fan could be quieter.
+LAP-0020,2026-10-14,Retail site (simulated),Novix Aero 14,4,Lightweight and stylish. Speakers are good for movies. Price is a bit high.
+LAP-0018,2026-10-15,Retail site (simulated),Novix Aero 14,5,"Charges from 0 to 70 percent in about 45 minutes, very handy when travelling."
+LAP-0021,2026-10-18,Online store (simulated),Novix Aero 14,5,Perfect college laptop. Battery lasts through all my lectures and it fits in a small bag.
+LAP-0015,2026-10-19,Retail site (simulated),Novix Aero 14,2,"Webcam is honestly terrible, everyone on zoom says I look blurry. Rest of the laptop is good."
+LAP-0016,2026-10-24,Online store (simulated),Novix Aero 14,4,Screen is gorgeous but very reflective in bright rooms.
+LAP-0019,2026-10-25,Retail site (simulated),Novix Aero 14,1,Hinge started creaking after three weeks and support keeps asking me to reinstall windows.
+LAP-0022,2026-10-25,Online store (simulated),Novix Aero 14,3,The trackpad sometimes registers palm touches while typing. Otherwise happy.
+LAP-0013,2026-10-27,Online store (simulated),Novix Aero 14,5,Still getting 11-12 hours of battery after a month. Keyboard backlight is nice too.

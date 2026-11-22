@@ -1,0 +1,60 @@
+{
+  "label": "Qwen2.5-1.5B LoRA",
+  "comparison_acos": [
+    {
+      "domain": "Books",
+      "best_published": 41.71,
+      "best_published_model": "T5-index",
+      "ours_all_domains_tagged": 38.6109212973077
+    },
+    {
+      "domain": "Clothing",
+      "best_published": 41.26,
+      "best_published_model": "T5-Paraphrase",
+      "ours_all_domains_tagged": 38.083226563332914
+    },
+    {
+      "domain": "Hotel",
+      "best_published": 69.22,
+      "best_published_model": "T5-index",
+      "ours_all_domains_tagged": 68.34771420904252
+    },
+    {
+      "domain": "Restaurant",
+      "best_published": 56.49,
+      "best_published_model": "T5-index",
+      "ours_all_domains_tagged": 56.72373791779358
+    },
+    {
+      "domain": "Laptop",
+      "best_published": 43.57,
+      "best_published_model": "T5-Paraphrase",
+      "ours_all_domains_tagged": 36.92885097268757
+    }
+  ],
+  "all_domains_tagged_subtasks": {
+    "AE": 80.23344774194298,
+    "ASPE": 76.01146577877189,
+    "CS": 68.28059474349537,
+    "AOS": 64.46285302555862,
+    "ACS": 58.626122494690634,
+    "ACOS": 50.238785717592926
+  },
+  "recall_by_group": {
+    "explicit aspect": 0.5136652025378233,
+    "explicit opinion": 0.5444038929440389,
+    "implicit aspect": 0.4566739077962829,
+    "implicit opinion": 0.3187214611872146
+  },
+  "errors": {
+    "missed_by_type": {
+      "category": 663,
+      "opinion": 376,
+      "sentiment": 64,
+      "aspect found, several elements wrong": 380,
+      "aspect missed": 1257
+    },
+    "spurious": 1219,
+    "missed_total": 2740
+  }
+}

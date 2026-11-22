@@ -1,0 +1,78 @@
+{
+  "label": "Flan-T5-base",
+  "comparison_acos": [
+    {
+      "domain": "Books",
+      "best_published": 41.71,
+      "best_published_model": "T5-index",
+      "ours_in_domain": 38.99605376157657,
+      "ours_all_domains": 38.71092210969166,
+      "ours_all_domains_tagged": 39.449359448860264
+    },
+    {
+      "domain": "Clothing",
+      "best_published": 41.26,
+      "best_published_model": "T5-Paraphrase",
+      "ours_in_domain": 40.41832477291852,
+      "ours_all_domains": 39.31808138029518,
+      "ours_all_domains_tagged": 40.86121368535057
+    },
+    {
+      "domain": "Hotel",
+      "best_published": 69.22,
+      "best_published_model": "T5-index",
+      "ours_in_domain": 65.5442439731824,
+      "ours_all_domains": 67.1550657095897,
+      "ours_all_domains_tagged": 67.67801020857071
+    },
+    {
+      "domain": "Restaurant",
+      "best_published": 56.49,
+      "best_published_model": "T5-index",
+      "ours_in_domain": 55.52994002093362,
+      "ours_all_domains": 54.58963742680487,
+      "ours_all_domains_tagged": 55.539803300090476
+    },
+    {
+      "domain": "Laptop",
+      "best_published": 43.57,
+      "best_published_model": "T5-Paraphrase",
+      "ours_in_domain": 33.9718012155382,
+      "ours_all_domains": 22.725911535259375,
+      "ours_all_domains_tagged": 34.839799897331865
+    }
+  ],
+  "all_domains_subtasks": {
+    "AE": 78.89102523604303,
+    "ASPE": 74.43876555875546,
+    "CS": 62.934333859135855,
+    "AOS": 63.01273684480841,
+    "ACS": 53.74903504698316,
+    "ACOS": 46.620366611819655
+  },
+  "all_domains_tagged_subtasks": {
+    "AE": 78.84822249029115,
+    "ASPE": 74.34756155608243,
+    "CS": 68.29285052019468,
+    "AOS": 62.79235947932409,
+    "ACS": 58.17653990645255,
+    "ACOS": 49.743511152412374
+  },
+  "recall_by_group": {
+    "explicit aspect": 0.5048804294777941,
+    "explicit opinion": 0.5167274939172749,
+    "implicit aspect": 0.3446777697320782,
+    "implicit opinion": 0.25540334855403346
+  },
+  "errors": {
+    "missed_by_type": {
+      "category": 764,
+      "opinion": 336,
+      "sentiment": 70,
+      "aspect found, several elements wrong": 445,
+      "aspect missed": 1272
+    },
+    "spurious": 1309,
+    "missed_total": 2887
+  }
+}

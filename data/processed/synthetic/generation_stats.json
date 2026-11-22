@@ -1,0 +1,38 @@
+{
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "temperature": 0.9,
+  "shots": 4,
+  "funnel": {
+    "generated": 3000,
+    "rejected: aspect missing": 178,
+    "rejected: duplicate": 42,
+    "rejected: not English": 227,
+    "passed format filters": 2553,
+    "verified neutral": 1705,
+    "rejected by verifier": 848
+  },
+  "verified_by_domain": {
+    "Books": 268,
+    "Clothing": 165,
+    "Hotel": 334,
+    "Laptop": 392,
+    "Restaurant": 546
+  },
+  "unverified_by_domain": {
+    "Books": 439,
+    "Clothing": 311,
+    "Hotel": 538,
+    "Laptop": 555,
+    "Restaurant": 710
+  },
+  "real_neutral_train_pairs": 455,
+  "before_refilter": {
+    "generated": 3000,
+    "rejected: aspect missing": 178,
+    "rejected: duplicate": 42,
+    "passed format filters": 2780,
+    "verified neutral": 1899,
+    "verifier said positive": 847,
+    "verifier said negative": 29
+  }
+}

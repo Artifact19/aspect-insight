@@ -1,0 +1,50 @@
+# Flan-T5 quadruple generation. Experiments run in the order listed; completed runs are skipped.
+model_name: google/flan-t5-base
+output_dir: outputs/runs/t5
+source_prefix: "extract quadruples: "
+
+max_source_len: 192
+max_target_len: 256
+batch_size: 16
+grad_accum: 1
+eval_batch_size: 64
+lr: 3.0e-4
+weight_decay: 0.01
+warmup_ratio: 0.06
+epochs: 15
+eval_from_epoch: 4
+patience: 4
+num_beams: 1
+
+experiments:
+  # one model on all five domains; the seed-42 model is kept for the web application
+  - name: all_domains
+    train: [Books, Clothing, Hotel, Laptop, Restaurant]
+    test: [Books, Clothing, Hotel, Laptop, Restaurant]
+    seeds: [42, 153, 650]
+    save_model_seeds: [42]
+
+  # the same single model, with the review domain named in the input ("extract quadruples (laptop): ...")
+  - name: all_domains_tagged
+    train: [Books, Clothing, Hotel, Laptop, Restaurant]
+    test: [Books, Clothing, Hotel, Laptop, Restaurant]
+    domain_in_source: true
+    seeds: [42, 153, 650]
+    save_model_seeds: [42]
+
+  # one model per domain, trained and tested on that domain (the setting of the MEMD-ABSA paper)
+  - name: in_domain
+    per_domain: true
+    seeds: [42, 153, 650]
+    epochs: 20
+
+  # Laptop and Restaurant only, tested on all five: transfer to unseen domains
+  - name: cross_laptop_restaurant
+    train: [Laptop, Restaurant]
+    test: [Books, Clothing, Hotel, Laptop, Restaurant]
+    seeds: [42]
+
+  # train on four domains, test on the fifth (the paper's out-of-domain setting)
+  - name: leave_one_out
+    leave_one_out: true
+    seeds: [42]

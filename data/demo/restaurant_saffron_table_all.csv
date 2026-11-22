@@ -1,0 +1,51 @@
+review_id,date,source,business,rating,review
+RES-0007,2026-10-01,Zomato (simulated),"Saffron Table, Koramangala",4,"Pizza crust was thin and crispy, toppings were fresh. Drinks a bit overpriced."
+RES-0006,2026-10-04,Google (simulated),"Saffron Table, Koramangala",5,"Cozy place, great music, and the staff remembered us from last time. Best date night spot in Koramangala."
+RES-0011,2026-10-08,Google (simulated),"Saffron Table, Koramangala",5,Booked for a team dinner of 12 and they handled it really well. Food came out together and hot.
+RES-0027,2026-10-08,Google (simulated),"Saffron Table, Indiranagar",4,Lovely interiors and the rooftop seating is beautiful. Service was slow but the pizza was worth it.
+RES-0036,2026-10-08,Zomato (simulated),"Saffron Table, Indiranagar",3,"Nice place, decent food, but waiting 30 mins for a table even with a reservation is not ok."
+RES-0035,2026-10-09,Zomato (simulated),"Saffron Table, Indiranagar",5,"The lasagna was amazing and the staff were super friendly. Came on a Tuesday, no wait at all."
+RES-0013,2026-10-10,Google (simulated),"Saffron Table, Koramangala",4,"Value for money, especially the weekday lunch combo. Desserts are a must."
+RES-0028,2026-10-11,Zomato (simulated),"Saffron Table, Indiranagar",2,Waited 25 minutes just to place our order. The waiter seemed overwhelmed. Tiramisu was good though.
+RES-0031,2026-10-11,Zomato (simulated),"Saffron Table, Indiranagar",4,"Risotto was rich and flavourful, desserts were excellent. Bit pricey but fine for a special occasion."
+RES-0034,2026-10-12,Google (simulated),"Saffron Table, Indiranagar",1,"Worst service ever. Order took over an hour, half of it came wrong and the bill had extra items."
+RES-0003,2026-10-13,Google (simulated),"Saffron Table, Koramangala",5,"Excellent service, our server Ravi recommended the lamb shank and it was perfect. Will be back."
+RES-0026,2026-10-17,Google (simulated),"Saffron Table, Indiranagar",3,Food was good but we waited 40 minutes for our mains on a Saturday night. Nobody told us why.
+RES-0033,2026-10-19,Google (simulated),"Saffron Table, Indiranagar",4,"The rooftop view at sunset is lovely. Drinks were good, food average."
+RES-0037,2026-10-19,Zomato (simulated),"Saffron Table, Indiranagar",4,Panna cotta and tiramisu both brilliant. Main course was ok.
+RES-0005,2026-10-20,Google (simulated),"Saffron Table, Koramangala",3,"Pasta was decent, nothing special. Desserts made up for it though, the panna cotta was lovely."
+RES-0009,2026-10-20,Google (simulated),"Saffron Table, Koramangala",5,The chocolate fondant is to die for. Service was attentive without being pushy.
+RES-0002,2026-10-21,Google (simulated),"Saffron Table, Koramangala",4,"Lovely ambience, soft lighting and not too loud. The mushroom risotto was creamy and well seasoned. Parking was a nightmare though."
+RES-0029,2026-10-21,Google (simulated),"Saffron Table, Indiranagar",5,Weekday lunch was quick and the food was delicious. Great spot for a work lunch.
+RES-0032,2026-10-21,Zomato (simulated),"Saffron Table, Indiranagar",2,"Booked a table for 8pm, got seated at 8:35. Staff were polite but clearly understaffed."
+RES-0030,2026-10-22,Google (simulated),"Saffron Table, Indiranagar",3,Ambience is gorgeous but service is painfully slow on weekends. Had to ask three times for water.
+RES-0012,2026-10-24,Google (simulated),"Saffron Table, Koramangala",3,Ambience is nice but the AC was way too cold. Food was ok.
+RES-0001,2026-10-25,Zomato (simulated),"Saffron Table, Koramangala",5,Came here for my sister's birthday and the tiramisu was honestly the best I've had in Bangalore. Staff were warm and quick.
+RES-0008,2026-10-25,Zomato (simulated),"Saffron Table, Koramangala",2,Had to circle the block 20 mins for parking. Food was good but the whole experience started on a bad note.
+RES-0004,2026-10-26,Google (simulated),"Saffron Table, Koramangala",4,Food is great and prices are fair for the portion size. Only complaint is there's no proper parking nearby.
+RES-0010,2026-10-28,Zomato (simulated),"Saffron Table, Koramangala",4,"Good vegetarian options, the pesto gnocchi was a highlight. Wine list is limited."
+RES-0024,2026-11-01,Zomato (simulated),"Saffron Table, Koramangala",3,Food is fine but the place is getting crowded and noisy on weekends.
+RES-0019,2026-11-02,Google (simulated),"Saffron Table, Koramangala",5,Beautiful decor for the festive season. Service was super quick even on a Saturday.
+RES-0020,2026-11-03,Google (simulated),"Saffron Table, Koramangala",4,"Bruschetta and the house salad were fresh. Parking still a pain, use the mall basement."
+RES-0041,2026-11-03,Google (simulated),"Saffron Table, Indiranagar",2,Our pasta was cold and it took forever to arrive. Expected better at this price.
+RES-0049,2026-11-03,Google (simulated),"Saffron Table, Indiranagar",5,"Hosted a small birthday on the rooftop, staff decorated the table and the cake was delicious."
+RES-0021,2026-11-04,Google (simulated),"Saffron Table, Koramangala",2,"Two of our pastas were cold. Manager comped dessert which was nice, but kitchen needs to fix this."
+RES-0046,2026-11-04,Google (simulated),"Saffron Table, Indiranagar",2,Staff are polite but there just aren't enough of them. Took 20 mins to get the bill.
+RES-0048,2026-11-08,Zomato (simulated),"Saffron Table, Indiranagar",3,"Lovely decor, average pasta, very slow service. Desserts are the only reason I'd return."
+RES-0017,2026-11-09,Google (simulated),"Saffron Table, Koramangala",4,Prices went up a bit this month but quality is still good. Loved the new seasonal soup.
+RES-0038,2026-11-10,Zomato (simulated),"Saffron Table, Indiranagar",2,Again a long wait on Sunday. Food is good but I'm not sure it's worth the 45 minute delay.
+RES-0039,2026-11-10,Google (simulated),"Saffron Table, Indiranagar",3,Pizza was tasty but the waiter forgot our drinks twice. Weekend service needs serious improvement.
+RES-0023,2026-11-13,Zomato (simulated),"Saffron Table, Koramangala",4,"Solid food, friendly staff, reasonable bill. The garlic bread is addictive."
+RES-0025,2026-11-13,Google (simulated),"Saffron Table, Koramangala",5,Hands down the best desserts in the area. The tiramisu and the lemon tart are both incredible.
+RES-0042,2026-11-14,Google (simulated),"Saffron Table, Indiranagar",5,"Came on a weekday, service was quick and the food was spot on. The tiramisu is a must try."
+RES-0016,2026-11-15,Zomato (simulated),"Saffron Table, Koramangala",4,Great atmosphere and lovely staff. The carbonara was slightly cold when it arrived but tasted good.
+RES-0047,2026-11-15,Google (simulated),"Saffron Table, Indiranagar",4,"The new menu has some great additions, loved the truffle fries. Service a bit slow as usual."
+RES-0043,2026-11-16,Google (simulated),"Saffron Table, Indiranagar",1,"Waited 50 mins, food arrived cold, and nobody apologised. Not coming back on a weekend."
+RES-0018,2026-11-17,Zomato (simulated),"Saffron Table, Koramangala",3,"Penne arrebiata was cold in the middle, like it was reheated. Desserts still great."
+RES-0050,2026-11-18,Zomato (simulated),"Saffron Table, Indiranagar",2,45 minute wait for two pizzas. The pizza was good but the experience was frustrating.
+RES-0014,2026-11-20,Zomato (simulated),"Saffron Table, Koramangala",5,Still my favourite italian place. Tiramisu never disappoints and the staff are always friendly.
+RES-0015,2026-11-20,Zomato (simulated),"Saffron Table, Koramangala",2,"The pasta came out lukewarm and the sauce had gone gluey. Told the waiter, he apologised but nothing was done."
+RES-0045,2026-11-21,Google (simulated),"Saffron Table, Indiranagar",3,"Decent food, great desserts, terrible wait times on Saturday."
+RES-0040,2026-11-26,Zomato (simulated),"Saffron Table, Indiranagar",4,Loved the ambience and the music. Gnocchi was soft and the sauce was perfect.
+RES-0044,2026-11-26,Zomato (simulated),"Saffron Table, Indiranagar",4,Prices are reasonable for Indiranagar. The rooftop is the best part.
+RES-0022,2026-11-28,Google (simulated),"Saffron Table, Koramangala",5,"Celebrated our anniversary here, the staff brought a candle on the dessert without us asking. So sweet."

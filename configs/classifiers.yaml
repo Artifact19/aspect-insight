@@ -1,0 +1,30 @@
+# Aspect-level sentiment classifiers and the class-imbalance study.
+model_name: microsoft/deberta-v3-small
+domains: [Books, Clothing, Hotel, Laptop, Restaurant]
+output_dir: outputs/runs/classifiers
+
+max_len: 128
+use_markers: true
+conflict_oversample: 2
+batch_size: 16
+lr: 2.0e-5
+weight_decay: 0.01
+warmup_ratio: 0.1
+epochs: 5
+
+seeds: [42, 153, 650]
+methods: [none, class_weights, oversample, focal, bagging]
+
+weight_clamp: 3.0
+focal_gamma: 2.0
+oversample_ratio: 0.3
+bagging_members: 5
+
+# LLM-generated Neutral pairs added to the training data (notebook 05); trained with class weights
+synthetic_pairs:
+  augment: data/processed/synthetic/neutral_pairs.jsonl
+  augment_noverify: data/processed/synthetic/neutral_pairs_unverified.jsonl
+
+save_models:
+  seeds: [42]
+  methods: [class_weights, bagging, augment]

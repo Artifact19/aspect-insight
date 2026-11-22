@@ -1,0 +1,31 @@
+# Qwen2.5-1.5B-Instruct with LoRA, generating quadruples in the same text format as Flan-T5.
+model_name: Qwen/Qwen2.5-1.5B-Instruct
+output_dir: outputs/runs/qwen
+
+max_len: 320
+max_new_tokens: 160
+batch_size: 8
+grad_accum: 2
+eval_batch_size: 64
+lr: 2.0e-4
+weight_decay: 0.0
+warmup_ratio: 0.03
+epochs: 3
+eval_from_epoch: 1
+patience: 2
+gradient_checkpointing: false
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+experiments:
+  # one model on all five domains, with the review domain named in the prompt; the seed-42 adapter is kept
+  - name: all_domains_tagged
+    domain_in_prompt: true
+    train: [Books, Clothing, Hotel, Laptop, Restaurant]
+    test: [Books, Clothing, Hotel, Laptop, Restaurant]
+    seeds: [42, 153, 650]
+    save_model_seeds: [42]

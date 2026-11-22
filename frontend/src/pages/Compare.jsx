@@ -1,0 +1,193 @@
+import React, { useMemo, useState } from "react";
+import { Bar, BarChart, CartesianGrid, LabelList, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { api, parseReviewFile, pct, titleCase } from "../lib.js";
+import { Card, DomainPicker, ErrorBox, Spinner } from "../components/ui.jsx";
+import { DemoPicker, Highlights, SummaryCard } from "../components/insights.jsx";
+
+const COLORS = { a: "#7B58A6", b: "#BF8B1F" };
+const PAIRS = [
+  { title: "Restaurant branches", domain: "Restaurant", a: "restaurant_saffron_table_koramangala", b: "restaurant_saffron_table_indiranagar", la: "Koramangala", lb: "Indiranagar" },
+  { title: "Laptop before vs after an update", domain: "Laptop", a: "laptop_novix_aero14_before_update", b: "laptop_novix_aero14_after_update", la: "Before update", lb: "After update" },
+  { title: "MacBook Air M3 vs Dell XPS 13", domain: "Laptop", a: "laptop_macbook_air_m3", b: "laptop_dell_xps_13", la: "MacBook Air M3", lb: "Dell XPS 13" },
+];
+
+function Side({ id, side, setSide, domain, disabled }) {
+  const count = side.text.split(/\r?\n/).filter((l) => l.trim()).length;
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSide({ label: file.name.replace(/\.(csv|txt)$/i, ""), text: parseReviewFile(await file.text(), file.name).join("\n") });
+    e.target.value = "";
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full text-sm font-extrabold text-white" style={{ background: COLORS[id] }}>{id.toUpperCase()}</span>
+        <input className="input py-1.5 font-bold" value={side.label} onChange={(e) => setSide({ ...side, label: e.target.value })} />
+      </div>
+      <textarea className="input min-h-[150px] font-mono text-[12.5px]" value={side.text} placeholder="One review per line…"
+        onChange={(e) => setSide({ ...side, text: e.target.value })} />
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="btn-ghost cursor-pointer py-1.5">Upload .txt / .csv<input type="file" accept=".txt,.csv" className="hidden" onChange={onFile} /></label>
+        <DemoPicker filterDomain={domain} disabled={disabled} onLoad={(d) => setSide({ label: d.label, text: d.reviews.join("\n") })} />
+        <span className="ml-auto text-xs text-muted">{count} reviews</span>
+      </div>
+    </div>
+  );
+}
+
+export default function Compare({ domains, domain, setDomain }) {
+  const [a, setA] = useState({ label: "A", text: "" });
+  const [b, setB] = useState({ label: "B", text: "" });
+  const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState("");
+  const [error, setError] = useState("");
+
+  const lines = (x) => x.text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+
+  const loadPair = async (pair) => {
+    setBusy("Loading demo files…"); setError(""); setResult(null);
+    try {
+      const [da, db] = await Promise.all([api.demoFile(pair.a), api.demoFile(pair.b)]);
+      setDomain(pair.domain);
+      setA({ label: pair.la, text: da.reviews.join("\n") });
+      setB({ label: pair.lb, text: db.reviews.join("\n") });
+    } catch (e) { setError(e.message); }
+    finally { setBusy(""); }
+  };
+
+  const run = async () => {
+    setError(""); setResult(null);
+    try {
+      setBusy(`Analyzing ${a.label}…`);
+      const ra = await api.batch(lines(a), domain);
+      setBusy(`Analyzing ${b.label}…`);
+      const rb = await api.batch(lines(b), domain);
+      setResult({ a: { label: a.label, summary: ra.summary, reviews: ra.reviews }, b: { label: b.label, summary: rb.summary, reviews: rb.reviews } });
+    } catch (e) { setError(e.message); }
+    finally { setBusy(""); }
+  };
+
+  const topics = useMemo(() => {
+    if (!result) return null;
+    const by = (s) => Object.fromEntries((s.entities || s.categories).map((c) => [c.name, c]));
+    const ca = by(result.a.summary), cb = by(result.b.summary);
+    const names = [...new Set([...Object.keys(ca), ...Object.keys(cb)])];
+    const rows = names.map((n) => {
+      const x = ca[n] || { negative: 0, positive: 0, total: 0 }, y = cb[n] || { negative: 0, positive: 0, total: 0 };
+      return { name: titleCase(n), a_neg: x.negative, b_neg: y.negative, a_pos: x.positive, b_pos: y.positive,
+        a_total: x.total, b_total: y.total, diff: y.negative - x.negative };
+    });
+    return {
+      complaints: [...rows].filter((r) => r.a_neg || r.b_neg).sort((p, q) => Math.max(q.a_neg, q.b_neg) - Math.max(p.a_neg, p.b_neg)).slice(0, 8),
+      praise: [...rows].filter((r) => r.a_pos || r.b_pos).sort((p, q) => Math.max(q.a_pos, q.b_pos) - Math.max(p.a_pos, p.b_pos)).slice(0, 8),
+      differences: [...rows].filter((r) => r.diff).sort((p, q) => Math.abs(q.diff) - Math.abs(p.diff)).slice(0, 6),
+    };
+  }, [result]);
+
+  const chart = (data, ka, kb, title, subtitle) => (
+    <Card title={title} subtitle={subtitle}>
+      <ResponsiveContainer width="100%" height={Math.max(200, data.length * 52 + 50)}>
+        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 34 }} barGap={2} barCategoryGap={10}>
+          <CartesianGrid horizontal={false} stroke="#EFE7DB" />
+          <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: "#7A716A" }} axisLine={false} tickLine={false} />
+          <YAxis type="category" dataKey="name" width={190} tick={{ fontSize: 12, fill: "#2E2A27" }} axisLine={false} tickLine={false} />
+          <Tooltip cursor={{ fill: "#F3EBDF" }} />
+          <Legend formatter={(v) => <span className="text-ink">{v === ka ? result.a.label : result.b.label}</span>} />
+          <Bar dataKey={ka} fill={COLORS.a} radius={[0, 4, 4, 0]} maxBarSize={16}>
+            <LabelList dataKey={ka} position="right" style={{ fontSize: 11, fill: "#2E2A27" }} />
+          </Bar>
+          <Bar dataKey={kb} fill={COLORS.b} radius={[0, 4, 4, 0]} maxBarSize={16}>
+            <LabelList dataKey={kb} position="right" style={{ fontSize: 11, fill: "#2E2A27" }} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </Card>
+  );
+
+  const glance = result && [
+    ["Reviews", result.a.reviews, result.b.reviews],
+    ["Opinions", result.a.summary.opinions, result.b.summary.opinions],
+    ["Positive share", pct(result.a.summary.share.positive), pct(result.b.summary.share.positive)],
+    ["Negative share", pct(result.a.summary.share.negative), pct(result.b.summary.share.negative)],
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-extrabold tracking-tight">Compare</h2>
+        <p className="mt-1 max-w-3xl text-muted">
+          Put two sets of reviews side by side, such as two branches, two products, or this month against last month, and see where
+          customers are happier or more critical, topic by topic.
+        </p>
+      </div>
+
+      <Card>
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="label mr-1">Try a demo</span>
+            {PAIRS.map((p) => <button key={p.title} className="chip border-line bg-white text-sm hover:border-brand-500" disabled={!!busy} onClick={() => loadPair(p)}>{p.title}</button>)}
+          </div>
+          <div><div className="label mb-2">Domain</div><DomainPicker domains={domains} value={domain} onChange={(d) => { setDomain(d); setResult(null); }} /></div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Side id="a" side={a} setSide={setA} domain={domain} disabled={!!busy} />
+            <Side id="b" side={b} setSide={setB} domain={domain} disabled={!!busy} />
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="btn-primary" onClick={run} disabled={!!busy || !lines(a).length || !lines(b).length}>Compare</button>
+            {busy && <Spinner text={busy} />}
+          </div>
+          <ErrorBox error={error} />
+        </div>
+      </Card>
+
+      {result && topics && (
+        <>
+          <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
+            <Card title="At a glance">
+              <table className="w-full border-collapse">
+                <thead><tr><th></th>
+                  {[["a", result.a.label], ["b", result.b.label]].map(([k, l]) => (
+                    <th key={k} className="text-right"><span className="inline-flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[k] }} />{l}</span></th>
+                  ))}</tr></thead>
+                <tbody>{glance.map(([k, x, y]) => (
+                  <tr key={k}><td className="text-muted">{k}</td><td className="text-right font-bold">{x}</td><td className="text-right font-bold">{y}</td></tr>
+                ))}</tbody>
+              </table>
+            </Card>
+            <SummaryCard domain={domain} title="Comparison summary"
+              batches={[{ label: result.a.label, summary: result.a.summary }, { label: result.b.label, summary: result.b.summary }]} />
+          </div>
+
+          <Card title="Biggest differences in complaints" subtitle="Topics where the number of complaints differs most">
+            <table className="w-full border-collapse">
+              <thead><tr><th>Topic</th><th className="text-right">{result.a.label}</th><th className="text-right">{result.b.label}</th><th className="text-right">Difference</th><th>Worse at</th></tr></thead>
+              <tbody>{topics.differences.map((r) => (
+                <tr key={r.name}>
+                  <td className="font-semibold">{r.name}</td>
+                  <td className="text-right">{r.a_neg} <span className="text-xs text-muted">of {r.a_total}</span></td>
+                  <td className="text-right">{r.b_neg} <span className="text-xs text-muted">of {r.b_total}</span></td>
+                  <td className="text-right font-bold">{Math.abs(r.diff)}</td>
+                  <td><span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: r.diff > 0 ? COLORS.b : COLORS.a }} />
+                    {r.diff > 0 ? result.b.label : result.a.label}</span></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </Card>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {chart(topics.complaints, "a_neg", "b_neg", "Complaints by topic", "Number of negative opinions")}
+            {chart(topics.praise, "a_pos", "b_pos", "Praise by topic", "Number of positive opinions")}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Highlights summary={result.a.summary} sentiment="negative" limit={3} title={`Fix first: ${result.a.label}`} />
+            <Highlights summary={result.b.summary} sentiment="negative" limit={3} title={`Fix first: ${result.b.label}`} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

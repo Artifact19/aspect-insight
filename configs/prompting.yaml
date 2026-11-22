@@ -1,0 +1,23 @@
+# In-context prompting baselines (no training). Every run uses the instruction of the fine-tuned model,
+# the category list of the sentence's domain, and k worked examples from that domain's training split.
+output_dir: outputs/runs/prompting
+max_new_tokens: 160
+batch_size: 16
+seed: 0
+
+runs:
+  - name: qwen7b_zero_shot
+    model_name: Qwen/Qwen2.5-7B-Instruct
+    shots: 0
+  - name: qwen7b_5shot_random
+    model_name: Qwen/Qwen2.5-7B-Instruct
+    shots: 5
+    selection: random
+  - name: qwen7b_5shot_similar
+    model_name: Qwen/Qwen2.5-7B-Instruct
+    shots: 5
+    selection: similar
+  - name: qwen1.5b_5shot_similar
+    model_name: Qwen/Qwen2.5-1.5B-Instruct
+    shots: 5
+    selection: similar

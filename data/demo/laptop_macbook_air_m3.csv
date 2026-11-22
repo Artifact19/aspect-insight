@@ -1,19 +1,18 @@
 review_id,date,source,business,rating,review
-LAP-0107,2026-10-06,Online store (simulated),Apple MacBook Air 13 (M3),2,The base model with 8GB RAM struggles with many chrome tabs and Lightroom. Upgrades are very expensive.
-LAP-0108,2026-10-07,Online store (simulated),Apple MacBook Air 13 (M3),4,Speakers are surprisingly full for such a thin machine. Webcam is clear on video calls.
-LAP-0104,2026-10-11,Online store (simulated),Apple MacBook Air 13 (M3),3,"Only two USB-C ports, so I'm living the dongle life again."
-LAP-0105,2026-10-11,Online store (simulated),Apple MacBook Air 13 (M3),5,"Super light and thin, easily the best laptop for travelling."
-LAP-0101,2026-10-14,Online store (simulated),Apple MacBook Air 13 (M3),5,"Battery life is unreal, I go two full days of college without charging."
-LAP-0106,2026-10-21,Retail site (simulated),Apple MacBook Air 13 (M3),4,Keyboard is comfortable and the trackpad is the best I've used on any laptop.
-LAP-0103,2026-10-25,Retail site (simulated),Apple MacBook Air 13 (M3),4,"The display is sharp and colour accurate, but it's only 60Hz which feels dated at this price."
-LAP-0102,2026-10-28,Retail site (simulated),Apple MacBook Air 13 (M3),5,"Completely silent since there's no fan, and it never gets uncomfortably hot on my lap."
-LAP-0117,2026-11-05,Retail site (simulated),Apple MacBook Air 13 (M3),5,"MagSafe charging is so convenient, and the charger is tiny."
-LAP-0114,2026-11-10,Online store (simulated),Apple MacBook Air 13 (M3),5,"Wakes instantly, apps open fast, and the battery barely moves while browsing."
-LAP-0115,2026-11-14,Online store (simulated),Apple MacBook Air 13 (M3),4,Driving two external monitors with the lid closed works well for my desk setup.
-LAP-0109,2026-11-16,Online store (simulated),Apple MacBook Air 13 (M3),3,Performance drops during long video exports because there's no fan to cool it.
-LAP-0112,2026-11-16,Retail site (simulated),Apple MacBook Air 13 (M3),4,"Great value when it's on sale, but the storage and memory upgrade prices are ridiculous."
-LAP-0116,2026-11-16,Online store (simulated),Apple MacBook Air 13 (M3),3,Lovely laptop but the price in India is steep for the base configuration.
-LAP-0113,2026-11-22,Retail site (simulated),Apple MacBook Air 13 (M3),4,The notch in the screen bothered me at first but I stopped noticing it after a week.
-LAP-0110,2026-11-24,Retail site (simulated),Apple MacBook Air 13 (M3),5,"Build quality is excellent, the aluminium body feels premium and solid."
-LAP-0111,2026-11-27,Retail site (simulated),Apple MacBook Air 13 (M3),2,"Gaming options on macOS are very limited, most of my steam library doesn't run."
-LAP-0118,2026-11-27,Retail site (simulated),Apple MacBook Air 13 (M3),4,Perfect for coding and writing. Just wish it had an HDMI port.
+LAP-0106,2026-10-02,Online store (simulated),Apple MacBook Air 13 (M3),4,Keyboard is comfortable and the trackpad is the best I've used on any laptop.
+LAP-0103,2026-10-03,Online store (simulated),Apple MacBook Air 13 (M3),4,"The display is sharp and colour accurate, but it's only 60Hz which feels dated at this price."
+LAP-0108,2026-10-03,Online store (simulated),Apple MacBook Air 13 (M3),4,Speakers are surprisingly full for such a thin machine. Webcam is clear on video calls.
+LAP-0101,2026-10-11,Online store (simulated),Apple MacBook Air 13 (M3),5,"Battery life is unreal, I go two full days of college without charging."
+LAP-0104,2026-10-12,Online store (simulated),Apple MacBook Air 13 (M3),3,"Only two USB-C ports, so I'm living the dongle life again."
+LAP-0102,2026-10-13,Online store (simulated),Apple MacBook Air 13 (M3),5,"Completely silent since there's no fan, and it never gets uncomfortably hot on my lap."
+LAP-0107,2026-10-14,Retail site (simulated),Apple MacBook Air 13 (M3),2,The base model with 8GB RAM struggles with many chrome tabs and Lightroom. Upgrades are very expensive.
+LAP-0105,2026-10-17,Online store (simulated),Apple MacBook Air 13 (M3),5,"Super light and thin, easily the best laptop for travelling."
+LAP-0110,2026-11-02,Online store (simulated),Apple MacBook Air 13 (M3),5,"Build quality is excellent, the aluminium body feels premium and solid."
+LAP-0113,2026-11-02,Online store (simulated),Apple MacBook Air 13 (M3),4,The notch in the screen bothered me at first but I stopped noticing it after a week.
+LAP-0114,2026-11-02,Online store (simulated),Apple MacBook Air 13 (M3),5,"Wakes instantly, apps open fast, and the battery barely moves while browsing."
+LAP-0109,2026-11-03,Retail site (simulated),Apple MacBook Air 13 (M3),3,Performance drops during long video exports because there's no fan to cool it.
+LAP-0116,2026-11-05,Online store (simulated),Apple MacBook Air 13 (M3),5,"MagSafe charging is so convenient, and the charger is tiny."
+LAP-0111,2026-11-08,Online store (simulated),Apple MacBook Air 13 (M3),2,"Gaming options on macOS are very limited, most of my steam library doesn't run."
+LAP-0115,2026-11-10,Retail site (simulated),Apple MacBook Air 13 (M3),3,Lovely laptop but the price in India is steep for the base configuration.
+LAP-0112,2026-11-19,Retail site (simulated),Apple MacBook Air 13 (M3),4,"Great value when it's on sale, but the storage and memory upgrade prices are ridiculous."
+LAP-0117,2026-11-19,Retail site (simulated),Apple MacBook Air 13 (M3),4,Perfect for coding and writing. Just wish it had an HDMI port.

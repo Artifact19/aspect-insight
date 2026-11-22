@@ -266,8 +266,18 @@ class Analyzer:
             facts = comparison_facts(batches[0]["summary"], batches[1]["summary"], batches[0]["label"],
                                      batches[1]["label"])
         task = SINGLE_TASK if len(batches) == 1 else COMPARE_TASK.format(a=batches[0]["label"], b=batches[1]["label"])
-        text, ms = self.writer().write(facts, task)
-        return {"text": text, "facts": facts, "unsupported_numbers": check_numbers(text, facts),
+        best, total_ms = None, 0.0
+        for attempt in range(3):
+            text, ms = self.writer().write(facts, task, sample=attempt > 0)
+            total_ms += ms
+            bad = check_numbers(text, facts)
+            if best is None or len(bad) < len(best[1]):
+                best = (text, bad)
+            if not bad:
+                break
+        text, ms = best[0], total_ms
+        return {"text": text, "facts": facts, "unsupported_numbers": best[1],
+                "highlights": highlight_spans(text, facts),
                 "model": SummaryWriter.name, "ms": round(ms)}
 
     def samples(self, domain: str, n: int = 50, seed: int = 0) -> list[str]:
@@ -291,6 +301,7 @@ def summarize(sentences: Sequence[dict], examples: int = 3) -> dict:
     candidates = defaultdict(lambda: defaultdict(dict))
     by_entity = defaultdict(Counter)
     entity_subs = defaultdict(Counter)
+    entity_reviews = defaultdict(lambda: defaultdict(set))
     for s in sentences:
         for q in s["quads"]:
             sent, cat = q["sentiment"], q["category_text"]
@@ -298,6 +309,7 @@ def summarize(sentences: Sequence[dict], examples: int = 3) -> dict:
             by_sentiment[sent] += 1
             by_category[cat][sent] += 1
             by_entity[ent][sent] += 1
+            entity_reviews[ent][sent].add(s["review"])
             entity_subs[ent][cat.partition(" - ")[2] or "general"] += 1
             by_aspect[(q["aspect"] or "(implied) " + cat).lower()][sent] += 1
             if q["aspect"]:
@@ -324,6 +336,7 @@ def summarize(sentences: Sequence[dict], examples: int = 3) -> dict:
                                       for t in ("positive", "negative", "neutral")}
             if prefix:
                 row["subtopics"] = [x for x, _ in entity_subs[k].most_common()]
+                row["reviews_with"] = {t: len(entity_reviews[k][t]) for t in ("positive", "negative", "neutral")}
             items.append(row)
         items.sort(key=lambda r: -r["total"])
         return items[:limit] if limit else items
@@ -380,27 +393,45 @@ def groups(summary: dict) -> list[dict]:
     return summary.get("entities") or [{**c, "name": topic(c["name"])} for c in summary["categories"]]
 
 
+def percent(n: int, total: int) -> int:
+    return int(100 * n / total + 0.5) if total else 0
+
+
+SIMILAR_POINTS = 5
+
+
+def complaint_rates(summary: dict) -> dict[str, int]:
+    """Percentage of reviews with at least one complaint about each topic, so that sets of different sizes compare
+    fairly."""
+    return {g["name"]: percent(g.get("reviews_with", {}).get("negative", g["negative"]), summary["reviews"])
+            for g in groups(summary) if g["negative"]}
+
+
 def comparison_facts(a: dict, b: dict, la: str, lb: str) -> list[str]:
-    """The comparison is worked out here; the writer only has to phrase these conclusions."""
-    na, nb = a["sentiment"]["negative"], b["sentiment"]["negative"]
-    more, less = ((la, na), (lb, nb)) if na >= nb else ((lb, nb), (la, na))
-    facts = [f"{la}: {a['reviews']} reviews with {a['sentiment']['positive']} positive and {na} negative opinions.",
-             f"{lb}: {b['reviews']} reviews with {b['sentiment']['positive']} positive and {nb} negative opinions.",
-             (f"{more[0]} has more negative opinions: {more[1]} vs {less[1]}." if na != nb else
-              f"{la} and {lb} have the same number of negative opinions: {na} each.")]
-    ca = {c["name"]: c["negative"] for c in groups(a)}
-    cb = {c["name"]: c["negative"] for c in groups(b)}
-    shared = set(ca) | set(cb)
-    gap = max(shared, key=lambda n: abs(ca.get(n, 0) - cb.get(n, 0))) if shared else None
-    if gap and ca.get(gap, 0) != cb.get(gap, 0):
-        facts.append(f"The biggest difference in complaints is about {gap}: {ca.get(gap, 0)} at {la} vs "
-                     f"{cb.get(gap, 0)} at {lb}.")
-    for x, label in ((a, la), (b, lb)):
-        worst = sorted([c for c in groups(x) if c["negative"]], key=lambda c: -c["negative"])[:1]
-        if worst:
-            aspects = ", ".join(worst[0].get("top_aspects", {}).get("negative", [])[:2])
-            facts.append(f"{label} should fix {worst[0]['name']} first: {worst[0]['negative']} complaints"
-                         + (f" (about {aspects})." if aspects else "."))
+    """The comparison is worked out here, on shares rather than raw counts; the writer only has to phrase it."""
+    sa, sb = (percent(x["sentiment"]["negative"], x["opinions"]) for x in (a, b))
+    facts = [f"{la}: {a['reviews']} reviews with {a['opinions']} opinions, {sa}% of them negative.",
+             f"{lb}: {b['reviews']} reviews with {b['opinions']} opinions, {sb}% of them negative."]
+    if abs(sa - sb) < SIMILAR_POINTS:
+        facts.append(f"{la} and {lb} have a similar share of negative opinions: {sa}% and {sb}%.")
+    else:
+        (hi, x), (lo, y) = ((la, sa), (lb, sb)) if sa > sb else ((lb, sb), (la, sa))
+        facts.append(f"{hi} has a higher share of negative opinions than {lo}: {x}% vs {y}%.")
+    ra, rb = complaint_rates(a), complaint_rates(b)
+    names = set(ra) | set(rb)
+    gap = max(names, key=lambda n: (abs(ra.get(n, 0) - rb.get(n, 0)), n)) if names else None
+    if gap and abs(ra.get(gap, 0) - rb.get(gap, 0)) >= 2 * SIMILAR_POINTS:
+        (hi, x), (lo, y) = (((la, ra.get(gap, 0)), (lb, rb.get(gap, 0))) if ra.get(gap, 0) > rb.get(gap, 0)
+                            else ((lb, rb.get(gap, 0)), (la, ra.get(gap, 0))))
+        facts.append(f"The biggest difference is {gap}: complaints in {x}% of {hi} reviews vs {y}% of {lo} reviews.")
+    for x, label, rates in ((a, la, ra), (b, lb, rb)):
+        if not rates:
+            continue
+        name = max(rates, key=lambda n: (rates[n], n))
+        row = next(g for g in groups(x) if g["name"] == name)
+        aspects = ", ".join(row.get("top_aspects", {}).get("negative", [])[:2])
+        facts.append(f"{label} should fix {name} first: complaints in {rates[name]}% of its reviews"
+                     + (f" (about {aspects})." if aspects else "."))
     return facts
 
 
@@ -409,6 +440,8 @@ PAIR = re.compile(r"(\d+)\s*(?:vs\.?|versus|compared (?:to|with))\s*(\d+)", re.I
 
 
 FACT_PAIRS = (re.compile(r"([a-z][a-z ]*?): (\d+) (?:complaints|positive mentions)"),
+              re.compile(r"biggest difference is ([a-z][a-z ]*?): complaints in (\d+)% of .+? vs (\d+)%"),
+              re.compile(r"should fix ([a-z][a-z ]*?) first: complaints in (\d+)%"),
               re.compile(r"about ([a-z][a-z ]*?): (\d+) at .+? vs (\d+) at"),
               re.compile(r"should fix ([a-z][a-z ]*?) first: (\d+) complaints"))
 
@@ -425,11 +458,14 @@ def topic_number_pairs(facts: Sequence[str]) -> tuple[set[str], set[tuple[str, s
     return topics, pairs
 
 
+CLAUSES = re.compile(r"(?<=[.!?])\s+|[,;]\s+(?=(?:but|while|whereas|although|however)\b)", re.IGNORECASE)
+
+
 def check_topic_numbers(text: str, facts: Sequence[str]) -> list[str]:
     """Each number is paired with the nearest topic named in the same sentence; the pair must be stated in the facts."""
     topics, pairs = topic_number_pairs(facts)
     bad = set()
-    for sentence in re.split(r"(?<=[.!?])\s+", text.lower()):
+    for sentence in CLAUSES.split(text.lower()):
         mentions = sorted((m.start(), t) for t in topics for m in re.finditer(r"\b" + re.escape(t) + r"\b", sentence))
         numbers = [(m.start(), m.group(0)) for m in NUMBER.finditer(sentence)]
         if not mentions or not numbers:
@@ -451,6 +487,35 @@ def check_topic_numbers(text: str, facts: Sequence[str]) -> list[str]:
     return sorted(bad)
 
 
+MORE_NEGATIVE = re.compile(r"\b(more|higher|fewer|lower|less)\b(?=[^.!?]{0,50}\b(?:negative|complaints?|criticism|"
+                           r"issues?|problems?)\b)", re.IGNORECASE)
+
+
+def check_direction(text: str, facts: Sequence[str]) -> list[str]:
+    """A sentence that says one side has more (or fewer) complaints must name the side the facts say."""
+    labels = [m.group(1).strip() for m in (re.match(r"([^:]+): \d+ (?:[a-z]+ )?reviews", f) for f in facts) if m]
+    if len(labels) != 2:
+        return []
+    higher = next((m.group(1) for m in (re.match(r"(.+?) has a higher share of negative opinions", f) for f in facts)
+                   if m), None)
+    similar = any("similar share of negative opinions" in f for f in facts)
+    bad = []
+    for sentence in re.split(r"(?<=[.!?])\s+", text):
+        for m in MORE_NEGATIVE.finditer(sentence):
+            if re.search(r"\b(?:topic|about|of)\b", sentence[m.start():m.start() + 60], re.IGNORECASE) and \
+                    "share" not in sentence[m.start():m.start() + 60] and "opinions" not in sentence[m.start():m.start() + 60]:
+                continue
+            named = [(sentence.find(x), x) for x in labels if 0 <= sentence.find(x) < m.start()]
+            if not named:
+                continue
+            subject = min(named)[1]
+            word = m.group(1).lower()
+            more = word in ("more", "higher")
+            if similar or (higher and (subject != higher) == more):
+                bad.append(f"{subject} has {word} complaints")
+    return bad
+
+
 def check_numbers(text: str, facts: Sequence[str]) -> list[str]:
     """Numbers in the generated text that occur nowhere in the facts, and "X vs Y" pairs that the facts do not state."""
     joined = " ".join(facts)
@@ -460,7 +525,104 @@ def check_numbers(text: str, facts: Sequence[str]) -> list[str]:
     bad |= {f"{x} vs {y}" for x, y in PAIR.findall(text) if (x, y) not in pairs and (y, x) not in pairs}
     bad |= {m.group(0) for m in OUT_OF.finditer(text) if m.group(0).lower() not in joined.lower()}
     bad |= set(check_topic_numbers(text, facts))
+    bad |= set(check_direction(text, facts))
     return sorted(bad)
+
+
+FACT_TERMS = (("complaint", re.compile(r"complaints at [^:]+: (.+)\.$", re.IGNORECASE)),
+              ("praise", re.compile(r"praise at [^:]+: (.+)\.$", re.IGNORECASE)),
+              ("complaint", re.compile(r"should fix (.+?) first: complaints in \d+% of its reviews(?: \(about (.+?)\))?",
+                                       re.IGNORECASE)),
+              ("complaint", re.compile(r"biggest difference is (.+?): complaints", re.IGNORECASE)))
+NEGATIVE_CUES = re.compile(r"complain|negative|fix|issue|problem|critic|concern|poor|weak|worse|unhappy|disappoint",
+                           re.IGNORECASE)
+POSITIVE_CUES = re.compile(r"prais|positive|love|like|strength|best|enjoy|happy|appreciat|good|great", re.IGNORECASE)
+COUNT = re.compile(r"\b\d+(?:\.\d+)?(?:\s*%(?:\s+of\s+(?:its\s+)?(?:[\w']+\s+){0,3}reviews)?|\s+(?:positive|negative|"
+                   r"neutral)?\s*(?:complaints?|mentions?|comments?|opinions?|reviews?))", re.IGNORECASE)
+SHARE_CLAIM = re.compile(r"(?:higher|lower|similar|bigger|smaller) share of negative opinions[^.!?]*?\d+%(?:\s*(?:vs\.?|"
+                         r"and|compared (?:to|with))\s*\d+%)?", re.IGNORECASE)
+ATTACH = 40
+
+
+def fact_terms(facts: Sequence[str]) -> tuple[dict, dict, list[str]]:
+    """Topic names and aspect phrases named in the facts, grouped by praise or complaint, and the batch labels."""
+    topics = {"complaint": set(), "praise": set()}
+    details = {"complaint": set(), "praise": set()}
+    labels = []
+    for fact in facts:
+        head = re.match(r"([^:]+): \d+ (?:[a-z]+ )?reviews", fact)
+        if head:
+            labels.append(head.group(1).strip())
+        for i, (kind, pattern) in enumerate(FACT_TERMS):
+            m = pattern.search(fact)
+            if not m:
+                continue
+            if i < 2:
+                for part in m.group(1).split("; "):
+                    name, _, rest = part.partition(":")
+                    topics[kind].add(name.strip())
+                    about = re.search(r"\(about (.+?)\)", rest)
+                    if about:
+                        details[kind].update(x.strip() for x in about.group(1).split(","))
+            else:
+                topics[kind].add(m.group(1).strip())
+                if m.lastindex and m.lastindex > 1 and m.group(2):
+                    details[kind].update(x.strip() for x in m.group(2).split(","))
+    for d in (topics, details):
+        for kind in d:
+            d[kind] = {t for t in d[kind] if len(t) > 2}
+    return topics, details, labels
+
+
+def highlight_spans(text: str, facts: Sequence[str]) -> list[dict]:
+    """Claims to highlight in the summary. A topic is joined with the count that belongs to it ("service, with 4
+    complaints") and coloured as praise or complaint; counts that belong to no topic are not highlighted on their own,
+    and the batch labels are returned so each product can be shown in its own colour."""
+    topics, details, labels = fact_terms(facts)
+    spans = []
+    for sentence in re.finditer(r"[^.!?]+[.!?]?", text):
+        s, offset = sentence.group(0), sentence.start()
+        neg, pos = bool(NEGATIVE_CUES.search(s)), bool(POSITIVE_CUES.search(s))
+        found = []
+        for strength, table in (("topic", topics), ("detail", details)):
+            for name in sorted(table["complaint"] | table["praise"], key=len, reverse=True):
+                for m in re.finditer(r"\b" + re.escape(name) + r"\b", s, re.IGNORECASE):
+                    if neg != pos:
+                        kind = "complaint" if neg else "praise"
+                    elif name in table["complaint"] and name in table["praise"]:
+                        kind = "complaint" if neg else "praise"
+                    else:
+                        kind = "complaint" if name in table["complaint"] else "praise"
+                    found.append([m.start(), m.end(), kind, strength])
+        for m in SHARE_CLAIM.finditer(s):
+            found.append([m.start(), m.end(), "complaint", "topic"])
+        found.sort(key=lambda x: (x[0], -(x[1] - x[0])))
+        terms = []
+        for item in found:
+            if terms and item[0] < terms[-1][1]:
+                continue
+            terms.append(item)
+        for m in COUNT.finditer(s):
+            if any(t[0] <= m.start() < t[1] for t in terms):
+                continue
+            before = [t for t in terms if t[1] <= m.start() and m.start() - t[1] <= ATTACH
+                      and not re.search(r"\d", s[t[1]:m.start()])]
+            after = [t for t in terms if t[0] >= m.end() and t[0] - m.end() <= ATTACH // 2
+                     and not re.search(r"\d", s[m.end():t[0]])]
+            if before:
+                t = max(before, key=lambda x: x[1])
+                t[1], t[3] = m.end(), "topic"
+            elif after:
+                t = min(after, key=lambda x: x[0])
+                t[0], t[3] = m.start(), "topic"
+        for start, end, kind, strength in terms:
+            spans.append({"start": offset + start, "end": offset + end,
+                          "kind": kind if strength == "topic" else f"{kind}_detail"})
+    for i, label in enumerate(sorted({x for x in labels if len(x) > 1}, key=len, reverse=True)):
+        for m in re.finditer(r"(?<!\w)" + re.escape(label) + r"(?!\w)", text):
+            if not any(x["start"] < m.end() and m.start() < x["end"] for x in spans):
+                spans.append({"start": m.start(), "end": m.end(), "kind": "label", "label": label})
+    return sorted(spans, key=lambda x: x["start"])
 
 
 class SummaryWriter:
@@ -476,7 +638,7 @@ class SummaryWriter:
         self.model = AutoModelForCausalLM.from_pretrained(self.name, dtype=self.dtype).to(device).eval()
 
     @torch.no_grad()
-    def write(self, facts: Sequence[str], task: str) -> tuple[str, float]:
+    def write(self, facts: Sequence[str], task: str, sample: bool = False) -> tuple[str, float]:
         messages = [
             {"role": "system", "content": "You write short, factual summaries of customer feedback for a business "
                                           "owner. Use only the facts provided. Never invent numbers, aspects or "
@@ -487,18 +649,20 @@ class SummaryWriter:
         enc = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         sync()
         t0 = time.perf_counter()
-        out = self.model.generate(**enc, max_new_tokens=140, do_sample=False, temperature=None, top_p=None,
-                                  top_k=None, repetition_penalty=1.05, pad_token_id=self.tokenizer.eos_token_id)
+        out = self.model.generate(**enc, max_new_tokens=140, do_sample=sample,
+                                  temperature=0.7 if sample else None, top_p=0.9 if sample else None, top_k=None, repetition_penalty=1.05, pad_token_id=self.tokenizer.eos_token_id)
         sync()
         text = self.tokenizer.decode(out[0, enc["input_ids"].shape[1]:], skip_special_tokens=True).strip()
+        text = re.sub(r"(?:(?<=^)|(?<=[.!?]\s))\s*\(?\d\)\s*", "", text).strip()
         if text and text[-1] not in ".!?\"" and re.search(r"[.!?]", text):
             text = text[:max(text.rfind("."), text.rfind("!"), text.rfind("?")) + 1]
         return text, (time.perf_counter() - t0) * 1000
 
 
-SINGLE_TASK = ("Write exactly 3 short sentences (under 70 words in total) for the owner: 1) what customers praise "
-               "most, 2) what they complain about most, 3) what to fix first. Quote counts only as given, as "
-               "'N complaints' or 'N positive mentions', giving each topic its own count. Never mention stars, ratings, "
-               "'out of' or numbers of customers.")
-COMPARE_TASK = ("Rewrite the last three facts as exactly 3 fluent sentences comparing {a} and {b}, under 70 words in "
-                "total. Keep every number exactly as written and do not add any other numbers or claims.")
+SINGLE_TASK = ("Write exactly 3 short sentences (under 70 words in total) for the owner. The first says what customers "
+               "praise most, the second what they complain about most, and the third what to fix first. Do not number "
+               "the sentences. Quote counts only as given, as 'N complaints' or 'N positive mentions', giving each topic "
+               "its own count. Never mention stars, ratings, 'out of' or numbers of customers.")
+COMPARE_TASK = ("Write one fluent sentence for each fact from the third fact on, comparing {a} and {b}, under 80 words "
+                "in total. Keep every number and percent sign exactly as written, keep which side is higher or lower "
+                "exactly as stated, and do not add any other numbers or claims. Do not number the sentences.")

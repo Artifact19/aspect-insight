@@ -1,0 +1,17 @@
+review_id,date,source,business,rating,review
+RES-0502,2026-10-01,Zomato (simulated),Domino's Pizza,4,"The Farmhouse pizza is my go to, fresh veggies and a good amount of cheese."
+RES-0505,2026-10-01,Google (simulated),Domino's Pizza,3,Pizza tastes good but the prices have gone up a lot recently.
+RES-0508,2026-10-05,Google (simulated),Domino's Pizza,4,Weekday offers make it good value for a group of friends.
+RES-0504,2026-10-09,Zomato (simulated),Domino's Pizza,4,The app is easy to use and live tracking tells you exactly when the order will arrive.
+RES-0506,2026-10-14,Zomato (simulated),Domino's Pizza,5,Choco lava cake is still the best dessert on the menu.
+RES-0507,2026-10-20,Zomato (simulated),Domino's Pizza,2,The delivery guy was late by 20 minutes and the garlic bread was cold.
+RES-0501,2026-10-22,Google (simulated),Domino's Pizza,5,Delivery arrived in under 30 minutes and the pizza was still hot.
+RES-0503,2026-10-27,Google (simulated),Domino's Pizza,2,The base was soggy and there was hardly any cheese on our Margherita.
+RES-0513,2026-11-02,Google (simulated),Domino's Pizza,3,Customer care took three days to refund a missing item.
+RES-0514,2026-11-03,Google (simulated),Domino's Pizza,4,"Consistent taste every time, you know exactly what you are getting."
+RES-0516,2026-11-04,Zomato (simulated),Domino's Pizza,5,"Late night delivery is a lifesaver during exams, always reliable."
+RES-0510,2026-11-13,Zomato (simulated),Domino's Pizza,4,Staff at the counter were quick and polite even on a busy Saturday.
+RES-0511,2026-11-13,Google (simulated),Domino's Pizza,2,Toppings were thrown on one side of the pizza and the crust was burnt.
+RES-0509,2026-11-15,Zomato (simulated),Domino's Pizza,3,"The dine in area is small and cramped, better to order home."
+RES-0515,2026-11-15,Google (simulated),Domino's Pizza,3,The sides are overpriced for the tiny portions you get.
+RES-0512,2026-11-16,Zomato (simulated),Domino's Pizza,5,"Cheese burst crust is unbeatable, worth every rupee."

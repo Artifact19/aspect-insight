@@ -1,0 +1,17 @@
+review_id,date,source,business,rating,review
+HOT-1102,2026-10-06,Google (simulated),ibis (budget hotel),5,"Great value for money, much cheaper than the big hotels nearby."
+HOT-1108,2026-10-08,Google (simulated),ibis (budget hotel),4,"Location is convenient, close to the airport road and the tech park."
+HOT-1105,2026-10-11,Booking site (simulated),ibis (budget hotel),4,Staff at the front desk were friendly and check in was quick.
+HOT-1103,2026-10-16,Google (simulated),ibis (budget hotel),3,"The room is very small, there was barely space to open my suitcase."
+HOT-1104,2026-10-18,Google (simulated),ibis (budget hotel),4,The bed was comfortable and I slept really well.
+HOT-1107,2026-10-18,Google (simulated),ibis (budget hotel),2,The walls are thin and I could hear the next room's TV.
+HOT-1101,2026-10-25,Google (simulated),ibis (budget hotel),4,"Clean, compact room with everything you need for a short business trip."
+HOT-1106,2026-10-26,Google (simulated),ibis (budget hotel),3,Breakfast is basic with not many options.
+HOT-1109,2026-11-09,Google (simulated),ibis (budget hotel),4,"Wifi was fast and free, which is important for work."
+HOT-1114,2026-11-15,Booking site (simulated),ibis (budget hotel),3,The AC was noisy but it cooled the room well.
+HOT-1111,2026-11-17,Booking site (simulated),ibis (budget hotel),4,Room was spotless and the towels were fresh every day.
+HOT-1112,2026-11-18,Google (simulated),ibis (budget hotel),2,No room service late at night and the restaurant closes early.
+HOT-1115,2026-11-20,Google (simulated),ibis (budget hotel),5,"Perfect budget hotel, I stay here every time I visit the city."
+HOT-1116,2026-11-23,Booking site (simulated),ibis (budget hotel),3,Parking is limited and fills up quickly in the evening.
+HOT-1110,2026-11-25,Google (simulated),ibis (budget hotel),3,The bathroom is tiny and the shower floods the floor.
+HOT-1113,2026-11-25,Google (simulated),ibis (budget hotel),4,"Simple and modern design, everything works."

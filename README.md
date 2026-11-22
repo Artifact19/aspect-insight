@@ -20,21 +20,21 @@ It is trained and evaluated on [MEMD-ABSA](https://github.com/NUSTM/MEMD-ABSA) (
 - **A diagnosed and fixed failure.** Without the domain, 26 % of a single model's Laptop predictions used categories from other domains. Naming the domain in the input cut this to 0.4 % and raised Laptop ACOS F1 from 22.7 to 34.8.
 - **Fine-tuning versus prompting.** Flan-T5 (49.7 ACOS F1, 35 ms per sentence) ties Qwen2.5-1.5B LoRA (50.2, not a significant difference) and beats prompting Qwen2.5-7B with five retrieved examples (30.4) by about 20 points.
 - **Rare-class study.** Five ways of handling the rare Neutral class (2.2 % of opinions), including balanced bagging and LLM-generated training data, with McNemar tests per seed and temperature scaling for calibrated confidences.
-- **Grounded summaries.** The dashboard's written summary is produced by an LLM from facts computed in code, and every number, "X vs Y" pair and "N out of M" claim in it is checked against those facts before it is shown.
+- **Grounded summaries.** The dashboard's written summary is produced by an LLM from facts computed in code, and every number, "X vs Y" pair, "N out of M" claim and "which side has more complaints" claim in it is checked against those facts before it is shown. Praised topics and complaints are highlighted together with their counts so the summary can be read at a glance.
 
 ## The web application
 
 | Page | What it does |
 |---|---|
 | **Analyze** | One review and its domain: aspects highlighted in their sentiment colour, the quadruple table, and a calibrated confidence from a second model that checks each sentiment |
-| **Batch insights** | Many reviews (paste, upload a .txt or .csv, or pick a demo file): a checked summary, "fix first" and "keep doing" topics with real quotes and a link to every review behind each number, sentiment by category, CSV export |
-| **Compare** | Two sets of reviews side by side (two branches, two products, before and after an update): biggest differences in complaints, charts and a checked comparison summary |
+| **Batch insights** | Many reviews (paste, upload a .txt or .csv, or pick a demo file): a checked summary with praised topics, complaints and counts highlighted, "fix first" and "keep doing" topics with real quotes and a link to every review behind each number, sentiment by category, CSV export |
+| **Compare** | Two products side by side, compared by the share of each side's reviews that praise or complain about a topic so that sets of different sizes compare fairly: biggest differences, charts and a checked comparison summary |
 | **Model lab** | One sentence through several generators with greedy, beam-search or sampling decoding, showing the raw generated text and latency |
 | **Evaluation** | Test-set results, the comparison with the published results and the error analysis |
 
 <p>
   <img src="docs/screenshots/step5.png" width="49%" alt="Summary and priorities">
-  <img src="docs/screenshots/step6.png" width="49%" alt="Comparing two restaurant branches">
+  <img src="docs/screenshots/step6.png" width="49%" alt="Comparing two products">
 </p>
 
 ## How it works
@@ -66,7 +66,7 @@ python -m venv .venv
 .venv\Scripts\activate              # Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
 python scripts/prepare_data.py      # builds data/processed/ from data/raw/
-python -m pytest                    # 31 tests
+python -m pytest                    # 34 tests
 ```
 
 ### Run the web application
@@ -125,7 +125,7 @@ The evaluation summaries used by the dashboard are included in `outputs/results/
 
 ## Demo data
 
-`data/demo/` contains 200 **simulated** reviews in 12 CSV files for trying the dashboard: two branches of a fictional restaurant, a fictional laptop before and after a firmware update, three well-known laptops (described only with traits widely reported in public reviews), a hotel, a kurta and a novel. None of them is a real customer review, and every row is marked as simulated.
+`data/demo/` contains 307 **simulated** reviews in 19 CSV files for trying the dashboard, three or four well-known products per domain: laptops (MacBook Air M3, Dell XPS 13, ASUS ROG Zephyrus G14, ThinkPad X1 Carbon), restaurants (Domino's, Pizza Hut, Starbucks, McDonald's), hotels (Taj Mahal Palace, Marina Bay Sands, ibis), clothing (Levi's 511, Nike Air Force 1, Uniqlo AIRism, Crocs) and books (Atomic Habits, The Alchemist, Harry Potter, Sapiens). They describe only traits widely reported in public reviews. None of them is a real customer review, and every row is marked as simulated.
 
 ## Dataset and references
 

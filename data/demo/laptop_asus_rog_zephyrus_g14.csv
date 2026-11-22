@@ -1,19 +1,18 @@
 review_id,date,source,business,rating,review
-LAP-0308,2026-10-03,Online store (simulated),ASUS ROG Zephyrus G14,4,"Speakers are punchy and loud, surprisingly good for a laptop."
-LAP-0305,2026-10-08,Online store (simulated),ASUS ROG Zephyrus G14,2,Battery life while gaming is barely an hour and a half.
-LAP-0301,2026-10-10,Online store (simulated),ASUS ROG Zephyrus G14,5,"The 120Hz OLED screen is the best I've seen on a gaming laptop, games look incredible."
-LAP-0304,2026-10-10,Online store (simulated),ASUS ROG Zephyrus G14,4,Aluminium build feels premium and it's compact enough to carry to college.
-LAP-0307,2026-10-21,Retail site (simulated),ASUS ROG Zephyrus G14,3,The bottom gets very hot during long gaming sessions.
-LAP-0306,2026-10-25,Retail site (simulated),ASUS ROG Zephyrus G14,4,"For browsing and notes the battery lasts around 7 hours, which is decent for a gaming laptop."
-LAP-0302,2026-10-26,Retail site (simulated),ASUS ROG Zephyrus G14,5,"Runs every game I play at high settings, the RTX 4070 is a beast in this small body."
-LAP-0303,2026-10-27,Online store (simulated),ASUS ROG Zephyrus G14,3,"Fans get really loud when gaming, you need headphones."
-LAP-0317,2026-11-02,Online store (simulated),ASUS ROG Zephyrus G14,5,"Screen, performance and design are all excellent. Best laptop I've owned."
-LAP-0314,2026-11-03,Online store (simulated),ASUS ROG Zephyrus G14,4,Trackpad is large and smooth. Webcam is only okay.
-LAP-0311,2026-11-08,Online store (simulated),ASUS ROG Zephyrus G14,3,"Expensive, but you're paying for a thin gaming laptop with a great screen."
-LAP-0309,2026-11-15,Online store (simulated),ASUS ROG Zephyrus G14,2,Armoury Crate software is bloated and keeps popping up notifications.
-LAP-0310,2026-11-15,Retail site (simulated),ASUS ROG Zephyrus G14,4,Keyboard is comfortable with nice per-key lighting.
-LAP-0318,2026-11-17,Online store (simulated),ASUS ROG Zephyrus G14,3,"Fan noise even during light tasks sometimes, silent mode helps a little."
-LAP-0315,2026-11-19,Online store (simulated),ASUS ROG Zephyrus G14,4,"Plenty of ports including HDMI and USB-A, no dongles needed."
-LAP-0313,2026-11-20,Retail site (simulated),ASUS ROG Zephyrus G14,3,"The charger brick is big and heavy, which ruins the portability a bit."
-LAP-0312,2026-11-27,Retail site (simulated),ASUS ROG Zephyrus G14,5,Perfect mix of portability and power. Video editing in Premiere is smooth.
-LAP-0316,2026-11-28,Retail site (simulated),ASUS ROG Zephyrus G14,2,Coil whine is noticeable in quiet rooms when the GPU is under load.
+LAP-0302,2026-10-05,Retail site (simulated),ASUS ROG Zephyrus G14,5,"Runs every game I play at high settings, the RTX 4070 is a beast in this small body."
+LAP-0301,2026-10-06,Retail site (simulated),ASUS ROG Zephyrus G14,5,"The 120Hz OLED screen is the best I've seen on a gaming laptop, games look incredible."
+LAP-0306,2026-10-11,Retail site (simulated),ASUS ROG Zephyrus G14,4,"For browsing and notes the battery lasts around 7 hours, which is decent for a gaming laptop."
+LAP-0303,2026-10-14,Online store (simulated),ASUS ROG Zephyrus G14,3,"Fans get really loud when gaming, you need headphones."
+LAP-0308,2026-10-19,Retail site (simulated),ASUS ROG Zephyrus G14,4,"Speakers are punchy and loud, surprisingly good for a laptop."
+LAP-0307,2026-10-20,Retail site (simulated),ASUS ROG Zephyrus G14,3,The bottom gets very hot during long gaming sessions.
+LAP-0304,2026-10-22,Online store (simulated),ASUS ROG Zephyrus G14,4,Aluminium build feels premium and it's compact enough to carry to college.
+LAP-0305,2026-10-25,Retail site (simulated),ASUS ROG Zephyrus G14,2,Battery life while gaming is barely an hour and a half.
+LAP-0316,2026-11-01,Retail site (simulated),ASUS ROG Zephyrus G14,5,"Screen, performance and design are all excellent. Best laptop I've owned."
+LAP-0312,2026-11-02,Retail site (simulated),ASUS ROG Zephyrus G14,5,Perfect mix of portability and power. Video editing in Premiere is smooth.
+LAP-0309,2026-11-03,Online store (simulated),ASUS ROG Zephyrus G14,2,Armoury Crate software is bloated and keeps popping up notifications.
+LAP-0310,2026-11-09,Retail site (simulated),ASUS ROG Zephyrus G14,4,Keyboard is comfortable with nice per-key lighting.
+LAP-0314,2026-11-10,Retail site (simulated),ASUS ROG Zephyrus G14,4,"Plenty of ports including HDMI and USB-A, no dongles needed."
+LAP-0317,2026-11-12,Online store (simulated),ASUS ROG Zephyrus G14,3,"Fan noise even during light tasks sometimes, silent mode helps a little."
+LAP-0313,2026-11-21,Retail site (simulated),ASUS ROG Zephyrus G14,3,"The charger brick is big and heavy, which ruins the portability a bit."
+LAP-0315,2026-11-22,Retail site (simulated),ASUS ROG Zephyrus G14,2,Coil whine is noticeable in quiet rooms when the GPU is under load.
+LAP-0311,2026-11-23,Online store (simulated),ASUS ROG Zephyrus G14,3,"Expensive, but you're paying for a thin gaming laptop with a great screen."

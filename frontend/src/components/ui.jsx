@@ -167,3 +167,16 @@ export function SentimentSplit({ counts }) {
     </div>
   );
 }
+
+export function Tabs({ tabs, value, onChange }) {
+  return (
+    <div className="flex gap-1 border-b border-line">
+      {tabs.map((t) => (
+        <button key={t.id} onClick={() => onChange(t.id)}
+          className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-bold transition ${value === t.id ? "border-brand-500 text-ink" : "border-transparent text-muted hover:text-ink"}`}>
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}

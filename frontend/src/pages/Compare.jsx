@@ -1,14 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, LabelList, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api, parseReviewFile, pct, titleCase } from "../lib.js";
-import { Card, DomainPicker, ErrorBox, Spinner } from "../components/ui.jsx";
+import { Card, DomainPicker, ErrorBox, Spinner, Tabs } from "../components/ui.jsx";
 import { DemoPicker, Highlights, SummaryCard } from "../components/insights.jsx";
 
 const COLORS = { a: "#7B58A6", b: "#BF8B1F" };
+const TEXT_COLORS = { a: "#664590", b: "#8A6314" };
+const SIMILAR = 10;
 const PAIRS = [
-  { title: "Restaurant branches", domain: "Restaurant", a: "restaurant_saffron_table_koramangala", b: "restaurant_saffron_table_indiranagar", la: "Koramangala", lb: "Indiranagar" },
-  { title: "Laptop before vs after an update", domain: "Laptop", a: "laptop_novix_aero14_before_update", b: "laptop_novix_aero14_after_update", la: "Before update", lb: "After update" },
-  { title: "MacBook Air M3 vs Dell XPS 13", domain: "Laptop", a: "laptop_macbook_air_m3", b: "laptop_dell_xps_13", la: "MacBook Air M3", lb: "Dell XPS 13" },
+  { title: "MacBook Air vs Dell XPS", domain: "Laptop", a: "laptop_macbook_air_m3", b: "laptop_dell_xps_13", la: "MacBook Air M3", lb: "Dell XPS 13" },
+  { title: "Domino's vs Pizza Hut", domain: "Restaurant", a: "restaurant_dominos", b: "restaurant_pizza_hut", la: "Domino's", lb: "Pizza Hut" },
+  { title: "Taj vs Marina Bay Sands", domain: "Hotel", a: "hotel_taj_mahal_palace_mumbai", b: "hotel_marina_bay_sands", la: "Taj Mahal Palace", lb: "Marina Bay Sands" },
+  { title: "Air Force 1 vs Crocs", domain: "Clothing", a: "clothing_nike_air_force_1", b: "clothing_crocs_classic_clog", la: "Nike Air Force 1", lb: "Crocs" },
+  { title: "Atomic Habits vs The Alchemist", domain: "Books", a: "books_atomic_habits", b: "books_the_alchemist", la: "Atomic Habits", lb: "The Alchemist" },
 ];
 
 function Side({ id, side, setSide, domain, disabled }) {
@@ -25,11 +29,11 @@ function Side({ id, side, setSide, domain, disabled }) {
         <span className="flex h-7 w-7 items-center justify-center rounded-full text-sm font-extrabold text-white" style={{ background: COLORS[id] }}>{id.toUpperCase()}</span>
         <input className="input py-1.5 font-bold" value={side.label} onChange={(e) => setSide({ ...side, label: e.target.value })} />
       </div>
-      <textarea className="input min-h-[150px] font-mono text-[12.5px]" value={side.text} placeholder="One review per line…"
+      <textarea className="input min-h-[110px] font-mono text-[12.5px]" value={side.text} placeholder="One review per line…"
         onChange={(e) => setSide({ ...side, text: e.target.value })} />
       <div className="flex flex-wrap items-center gap-2">
-        <label className="btn-ghost cursor-pointer py-1.5">Upload .txt / .csv<input type="file" accept=".txt,.csv" className="hidden" onChange={onFile} /></label>
-        <DemoPicker filterDomain={domain} disabled={disabled} onLoad={(d) => setSide({ label: d.label, text: d.reviews.join("\n") })} />
+        <label className="btn-ghost cursor-pointer py-1.5">Upload<input type="file" accept=".txt,.csv" className="hidden" onChange={onFile} /></label>
+        <DemoPicker filterDomain={domain} disabled={disabled} placeholder="Demo product…" onLoad={(d) => setSide({ label: d.label, text: d.reviews.join("\n") })} />
         <span className="ml-auto text-xs text-muted">{count} reviews</span>
       </div>
     </div>
@@ -42,6 +46,7 @@ export default function Compare({ domains, domain, setDomain }) {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [tab, setTab] = useState("overview");
 
   const lines = (x) => x.text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 
@@ -63,6 +68,7 @@ export default function Compare({ domains, domain, setDomain }) {
       const ra = await api.batch(lines(a), domain);
       setBusy(`Analyzing ${b.label}…`);
       const rb = await api.batch(lines(b), domain);
+      setTab("overview");
       setResult({ a: { label: a.label, summary: ra.summary, reviews: ra.reviews }, b: { label: b.label, summary: rb.summary, reviews: rb.reviews } });
     } catch (e) { setError(e.message); }
     finally { setBusy(""); }
@@ -72,11 +78,14 @@ export default function Compare({ domains, domain, setDomain }) {
     if (!result) return null;
     const by = (s) => Object.fromEntries((s.entities || s.categories).map((c) => [c.name, c]));
     const ca = by(result.a.summary), cb = by(result.b.summary);
+    const ra = result.a.reviews, rb = result.b.reviews;
+    const share = (c, k, n) => (c ? Math.round((100 * ((c.reviews_with || {})[k] ?? c[k])) / Math.max(1, n)) : 0);
     const names = [...new Set([...Object.keys(ca), ...Object.keys(cb)])];
     const rows = names.map((n) => {
-      const x = ca[n] || { negative: 0, positive: 0, total: 0 }, y = cb[n] || { negative: 0, positive: 0, total: 0 };
-      return { name: titleCase(n), a_neg: x.negative, b_neg: y.negative, a_pos: x.positive, b_pos: y.positive,
-        a_total: x.total, b_total: y.total, diff: y.negative - x.negative };
+      const x = ca[n], y = cb[n];
+      return { name: titleCase(n), a_neg: share(x, "negative", ra), b_neg: share(y, "negative", rb),
+        a_pos: share(x, "positive", ra), b_pos: share(y, "positive", rb),
+        a_count: x?.negative || 0, b_count: y?.negative || 0, diff: share(y, "negative", rb) - share(x, "negative", ra) };
     });
     return {
       complaints: [...rows].filter((r) => r.a_neg || r.b_neg).sort((p, q) => Math.max(q.a_neg, q.b_neg) - Math.max(p.a_neg, p.b_neg)).slice(0, 8),
@@ -90,15 +99,15 @@ export default function Compare({ domains, domain, setDomain }) {
       <ResponsiveContainer width="100%" height={Math.max(200, data.length * 52 + 50)}>
         <BarChart data={data} layout="vertical" margin={{ left: 8, right: 34 }} barGap={2} barCategoryGap={10}>
           <CartesianGrid horizontal={false} stroke="#EFE7DB" />
-          <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: "#7A716A" }} axisLine={false} tickLine={false} />
+          <XAxis type="number" allowDecimals={false} unit="%" tick={{ fontSize: 12, fill: "#7A716A" }} axisLine={false} tickLine={false} />
           <YAxis type="category" dataKey="name" width={190} tick={{ fontSize: 12, fill: "#2E2A27" }} axisLine={false} tickLine={false} />
-          <Tooltip cursor={{ fill: "#F3EBDF" }} />
+          <Tooltip cursor={{ fill: "#F3EBDF" }} formatter={(v, k) => [`${v}% of reviews`, k === ka ? result.a.label : result.b.label]} />
           <Legend formatter={(v) => <span className="text-ink">{v === ka ? result.a.label : result.b.label}</span>} />
           <Bar dataKey={ka} fill={COLORS.a} radius={[0, 4, 4, 0]} maxBarSize={16}>
-            <LabelList dataKey={ka} position="right" style={{ fontSize: 11, fill: "#2E2A27" }} />
+            <LabelList dataKey={ka} position="right" formatter={(v) => `${v}%`} style={{ fontSize: 11, fill: "#2E2A27" }} />
           </Bar>
           <Bar dataKey={kb} fill={COLORS.b} radius={[0, 4, 4, 0]} maxBarSize={16}>
-            <LabelList dataKey={kb} position="right" style={{ fontSize: 11, fill: "#2E2A27" }} />
+            <LabelList dataKey={kb} position="right" formatter={(v) => `${v}%`} style={{ fontSize: 11, fill: "#2E2A27" }} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -117,15 +126,14 @@ export default function Compare({ domains, domain, setDomain }) {
       <div>
         <h2 className="text-2xl font-extrabold tracking-tight">Compare</h2>
         <p className="mt-1 max-w-3xl text-muted">
-          Put two sets of reviews side by side, such as two branches, two products, or this month against last month, and see where
-          customers are happier or more critical, topic by topic.
+          Put two products side by side and see where customers are happier or more critical, topic by topic.
         </p>
       </div>
 
       <Card>
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="label mr-1">Try a demo</span>
+            <span className="label mr-1">Try a pair</span>
             {PAIRS.map((p) => <button key={p.title} className="chip border-line bg-white text-sm hover:border-brand-500" disabled={!!busy} onClick={() => loadPair(p)}>{p.title}</button>)}
           </div>
           <div><div className="label mb-2">Domain</div><DomainPicker domains={domains} value={domain} onChange={(d) => { setDomain(d); setResult(null); }} /></div>
@@ -143,6 +151,11 @@ export default function Compare({ domains, domain, setDomain }) {
 
       {result && topics && (
         <>
+          <Tabs value={tab} onChange={setTab} tabs={[
+            { id: "overview", label: "Overview" }, { id: "charts", label: "Charts" }, { id: "fix", label: "Fix first" },
+          ]} />
+
+          {tab === "overview" && <>
           <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
             <Card title="At a glance">
               <table className="w-full border-collapse">
@@ -157,35 +170,46 @@ export default function Compare({ domains, domain, setDomain }) {
               </table>
             </Card>
             <SummaryCard domain={domain} title="Comparison summary"
+              labelColors={{ [result.a.label]: TEXT_COLORS.a, [result.b.label]: TEXT_COLORS.b }}
               batches={[{ label: result.a.label, summary: result.a.summary }, { label: result.b.label, summary: result.b.summary }]} />
           </div>
 
-          <Card title="Biggest differences in complaints" subtitle="Topics where the number of complaints differs most">
+          <Card title="Biggest differences in complaints"
+            subtitle={`Share of each side's reviews that complain about the topic, so sets of different sizes compare fairly. Gaps under ${SIMILAR} points are marked similar.`}>
             <table className="w-full border-collapse">
-              <thead><tr><th>Topic</th><th className="text-right">{result.a.label}</th><th className="text-right">{result.b.label}</th><th className="text-right">Difference</th><th>Worse at</th></tr></thead>
+              <thead><tr><th>Topic</th><th className="text-right">{result.a.label}</th><th className="text-right">{result.b.label}</th><th className="text-right">Gap</th><th>Worse at</th></tr></thead>
               <tbody>{topics.differences.map((r) => (
                 <tr key={r.name}>
                   <td className="font-semibold">{r.name}</td>
-                  <td className="text-right">{r.a_neg} <span className="text-xs text-muted">of {r.a_total}</span></td>
-                  <td className="text-right">{r.b_neg} <span className="text-xs text-muted">of {r.b_total}</span></td>
-                  <td className="text-right font-bold">{Math.abs(r.diff)}</td>
-                  <td><span className="inline-flex items-center gap-1.5 text-sm font-semibold">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: r.diff > 0 ? COLORS.b : COLORS.a }} />
-                    {r.diff > 0 ? result.b.label : result.a.label}</span></td>
+                  <td className="text-right">{r.a_neg}% <span className="text-xs text-muted">({r.a_count})</span></td>
+                  <td className="text-right">{r.b_neg}% <span className="text-xs text-muted">({r.b_count})</span></td>
+                  <td className="text-right font-bold">{Math.abs(r.diff)} pts</td>
+                  <td>{Math.abs(r.diff) < SIMILAR ? <span className="text-sm text-muted">Similar</span> : (
+                    <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: r.diff > 0 ? COLORS.b : COLORS.a }} />
+                      {r.diff > 0 ? result.b.label : result.a.label}</span>)}</td>
                 </tr>
               ))}</tbody>
             </table>
+            <p className="mt-3 text-xs text-muted">
+              Brackets show the number of complaints. With {Math.min(result.a.reviews, result.b.reviews)} reviews on the smaller side, one review changes a share by about {Math.round(100 / Math.max(1, Math.min(result.a.reviews, result.b.reviews)))} points.
+            </p>
           </Card>
+          </>}
 
+          {tab === "charts" && (
           <div className="grid gap-6 lg:grid-cols-2">
-            {chart(topics.complaints, "a_neg", "b_neg", "Complaints by topic", "Number of negative opinions")}
-            {chart(topics.praise, "a_pos", "b_pos", "Praise by topic", "Number of positive opinions")}
+            {chart(topics.complaints, "a_neg", "b_neg", "Complaints by topic", "% of reviews with a complaint about the topic")}
+            {chart(topics.praise, "a_pos", "b_pos", "Praise by topic", "% of reviews praising the topic")}
           </div>
+          )}
 
+          {tab === "fix" && (
           <div className="grid gap-6 lg:grid-cols-2">
             <Highlights summary={result.a.summary} sentiment="negative" limit={3} title={`Fix first: ${result.a.label}`} />
             <Highlights summary={result.b.summary} sentiment="negative" limit={3} title={`Fix first: ${result.b.label}`} />
           </div>
+          )}
         </>
       )}
     </div>

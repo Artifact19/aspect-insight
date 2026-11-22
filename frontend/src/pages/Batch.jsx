@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { SENTIMENT_COLORS, SENTIMENTS, api, download, parseReviewFile, pct, titleCase, toCsv } from "../lib.js";
-import { Card, DomainPicker, ErrorBox, SentimentBadge, SentimentSplit, Spinner, Stat } from "../components/ui.jsx";
+import { Card, DomainPicker, ErrorBox, SentimentBadge, SentimentSplit, Spinner, Stat, Tabs } from "../components/ui.jsx";
 import { DemoPicker, Highlights, SummaryCard } from "../components/insights.jsx";
 
 export default function Batch({ domains, domain, setDomain }) {
@@ -12,12 +12,13 @@ export default function Batch({ domains, domain, setDomain }) {
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [label, setLabel] = useState("These reviews");
+  const [tab, setTab] = useState("overview");
   const tableRef = useRef(null);
   const reviews = useMemo(() => text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean), [text]);
 
-  const loadSample = async (n) => {
+  const loadSample = async (n = 40) => {
     setBusy("Loading test reviews…"); setError("");
-    try { setText((await api.samples(domain, n, Math.floor(Math.random() * 1000))).reviews.join("\n")); setLabel("Test-set reviews"); setResult(null); }
+    try { setText((await api.samples(domain, n, Math.floor(Math.random() * 1000))).reviews.join("\n")); setLabel("Test-set reviews"); setResult(null); setTab("overview"); }
     catch (e) { setError(e.message); }
     finally { setBusy(""); }
   };
@@ -27,7 +28,7 @@ export default function Batch({ domains, domain, setDomain }) {
     if (!file) return;
     setText(parseReviewFile(await file.text(), file.name).join("\n"));
     setLabel(file.name.replace(/\.(csv|txt)$/i, ""));
-    setResult(null);
+    setResult(null); setTab("overview");
     e.target.value = "";
   };
 
@@ -35,18 +36,19 @@ export default function Batch({ domains, domain, setDomain }) {
     setDomain(d.domain);
     setText(d.reviews.join("\n"));
     setLabel(d.label);
-    setResult(null);
+    setResult(null); setTab("overview");
   };
 
   const showEvidence = (category, sentiment) => {
     setFilter(sentiment);
     setQuery(category);
+    setTab("opinions");
     setTimeout(() => tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
 
   const run = async () => {
     setBusy(`Analyzing ${reviews.length} reviews…`); setError("");
-    try { setResult(await api.batch(reviews, domain)); }
+    try { setResult(await api.batch(reviews, domain)); setTab("overview"); setFilter("all"); setQuery(""); }
     catch (e) { setError(e.message); }
     finally { setBusy(""); }
   };
@@ -66,54 +68,60 @@ export default function Batch({ domains, domain, setDomain }) {
       <div>
         <h2 className="text-2xl font-extrabold tracking-tight">Batch insights</h2>
         <p className="mt-1 max-w-3xl text-muted">
-          Analyze many reviews at once and see what customers praise and criticise, by category and by aspect.
-          One review per line, a .txt or .csv file, a demo file, or real reviews from the test set.
+          See what customers praise and criticise across many reviews. Pick a demo product, upload a file, or paste one review per line.
         </p>
       </div>
 
       <Card>
         <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <DemoPicker onLoad={loadDemo} disabled={!!busy} />
+            <span className="text-sm text-muted">or</span>
+            <label className="btn-ghost cursor-pointer">Upload .txt / .csv<input type="file" accept=".txt,.csv" className="hidden" onChange={onFile} /></label>
+            <button className="btn-ghost" onClick={() => loadSample()} disabled={!!busy}>Test-set sample</button>
+          </div>
           <div><div className="label mb-2">Domain</div><DomainPicker domains={domains} value={domain} onChange={(d) => { setDomain(d); setResult(null); }} /></div>
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="label">Reviews</span>
+              <span className="label">Reviews{label !== "These reviews" ? ` · ${label}` : ""}</span>
               <span className="text-xs text-muted">{reviews.length} review{reviews.length === 1 ? "" : "s"}</span>
             </div>
-            <textarea className="input min-h-[160px] font-mono text-[13px]" value={text} onChange={(e) => setText(e.target.value)}
+            <textarea className="input min-h-[130px] font-mono text-[13px]" value={text} onChange={(e) => setText(e.target.value)}
               placeholder="One review per line…" />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button className="btn-primary" onClick={run} disabled={!!busy || !reviews.length}>Analyze all</button>
-            <button className="btn-ghost" onClick={() => loadSample(25)} disabled={!!busy}>Load 25 test reviews</button>
-            <button className="btn-ghost" onClick={() => loadSample(100)} disabled={!!busy}>Load 100</button>
-            <label className="btn-ghost cursor-pointer">Upload .txt / .csv<input type="file" accept=".txt,.csv" className="hidden" onChange={onFile} /></label>
-            <DemoPicker onLoad={loadDemo} disabled={!!busy} />
+          <div className="flex flex-wrap items-center gap-3">
+            <button className="btn-primary" onClick={run} disabled={!!busy || !reviews.length}>Analyze {reviews.length || ""} reviews</button>
+            {busy && <Spinner text={busy} />}
           </div>
-          {busy && <Spinner text={busy} />}
           <ErrorBox error={error} />
         </div>
       </Card>
 
       {s && (
         <>
+          <Tabs value={tab} onChange={setTab} tabs={[
+            { id: "overview", label: "Overview" }, { id: "charts", label: "Charts" }, { id: "opinions", label: `All opinions (${rows.length})` },
+          ]} />
+
+          {tab === "overview" && <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Reviews" value={result.reviews} hint={`${s.sentences} sentences`} />
             <Stat label="Opinions" value={s.opinions} hint={`${(s.opinions / Math.max(1, result.reviews)).toFixed(1)} per review`} />
             <Stat label="Positive share" value={pct(s.share.positive)} color="#0F8C74" />
-            <Stat label="Negative share" value={pct(s.share.negative)} color="#D0533C"
-              hint={`${(result.timing.total_ms / 1000).toFixed(1)} s total`} />
+            <Stat label="Negative share" value={pct(s.share.negative)} color="#D0533C" />
           </div>
-
 
           <SummaryCard domain={domain} batches={[{ label, summary: s }]} />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <Highlights summary={s} sentiment="negative" title="Fix first" onShow={showEvidence}
-              subtitle="Topics with the most complaints, with a real example from the reviews" />
-            <Highlights summary={s} sentiment="positive" title="Keep doing" onShow={showEvidence} limit={4}
+              limit={3} subtitle="Topics with the most complaints" />
+            <Highlights summary={s} sentiment="positive" title="Keep doing" onShow={showEvidence} limit={3}
               subtitle="What customers praise most" />
           </div>
+          </>}
 
+          {tab === "charts" && (
           <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
             <Card title="Sentiment by category" subtitle="Number of opinions per category, split by sentiment (top 12 categories)">
               <ResponsiveContainer width="100%" height={Math.max(220, categories.length * 34 + 60)}>
@@ -146,7 +154,10 @@ export default function Batch({ domains, domain, setDomain }) {
             </Card>
           </div>
 
+          )}
+
           <div ref={tableRef} />
+          {tab === "opinions" && (
           <Card title="All extracted opinions" subtitle={`${shown.length} of ${rows.length} shown`}
             right={<button className="btn-ghost" onClick={() => download(`opinions_${domain.toLowerCase()}.csv`, toCsv(rows))}>Download CSV</button>}>
             <div className="mb-3 flex flex-wrap gap-2">
@@ -174,6 +185,7 @@ export default function Batch({ domains, domain, setDomain }) {
               </table>
             </div>
           </Card>
+          )}
         </>
       )}
     </div>

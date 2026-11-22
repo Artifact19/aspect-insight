@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { api } from "../lib.js";
-import { Card, DomainPicker, ErrorBox, Highlighted, QuadTable, SentimentSplit, Spinner, Stat } from "../components/ui.jsx";
+import { Card, DomainPicker, ErrorBox, Highlighted, QuadTable, SentimentSplit, Spinner } from "../components/ui.jsx";
 
 export default function Analyze({ domains, domain, setDomain }) {
   const examples = domains.find((d) => d.name === domain)?.examples || [];
@@ -31,8 +31,8 @@ export default function Analyze({ domains, domain, setDomain }) {
       <div>
         <h2 className="text-2xl font-extrabold tracking-tight">Analyze a review</h2>
         <p className="mt-1 max-w-3xl text-muted">
-          Paste a review and choose its domain. The generator writes every opinion as an (aspect, category, opinion, sentiment)
-          quadruple; a separate classifier double-checks each sentiment with a calibrated confidence.
+          Paste a review and choose its domain. The model writes every opinion as an (aspect, category, opinion, sentiment)
+          quadruple, and a second model double-checks each sentiment.
         </p>
       </div>
 
@@ -62,18 +62,13 @@ export default function Analyze({ domains, domain, setDomain }) {
 
       {result && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat label="Opinions found" value={quads.length} hint={`${result.sentences.length} sentence${result.sentences.length === 1 ? "" : "s"}`} />
-            <Stat label="Positive" value={result.summary.sentiment.positive} color="#0F8C74" />
-            <Stat label="Negative" value={result.summary.sentiment.negative} color="#D0533C" />
-            <Stat label="Time" value={`${(result.timing.total_ms / 1000).toFixed(2)} s`}
-              hint={`${result.timing.generation_ms_per_sentence} ms per sentence to generate`} />
-          </div>
-
-          <Card title="What the review says" subtitle="Aspects are highlighted in their sentiment colour; opinion words are underlined. Hover for details.">
+          <Card title="What the review says"
+            subtitle="Aspects are highlighted in their sentiment colour and opinion words are underlined. Hover for details."
+            right={<span className="whitespace-nowrap text-sm text-muted"><b className="text-ink">{quads.length}</b> opinion{quads.length === 1 ? "" : "s"} · {(result.timing.total_ms / 1000).toFixed(2)} s</span>}>
+            <div className="mb-5"><SentimentSplit counts={result.summary.sentiment} /></div>
             <div className="space-y-5">
               {result.sentences.map((s, i) => (
-                <div key={i} className={i ? "border-t border-line pt-5" : ""}>
+                <div key={i} className="border-t border-line pt-5">
                   <Highlighted text={s.text} quads={s.quads} />
                   <div className="mt-3"><QuadTable quads={s.quads} /></div>
                   {s.discarded.length > 0 && (
@@ -86,22 +81,23 @@ export default function Analyze({ domains, domain, setDomain }) {
             </div>
           </Card>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card title="Overall sentiment"><SentimentSplit counts={result.summary.sentiment} /></Card>
-            <Card title="Under the hood" subtitle="What the model actually received and wrote">
-              <div className="space-y-3 text-sm">
-                {result.sentences.slice(0, 3).map((s, i) => (
-                  <div key={i} className="rounded-lg bg-panel p-3 font-mono text-[12.5px] leading-relaxed">
-                    <div><span className="text-muted">input&nbsp; </span>extract quadruples ({domain.toLowerCase()}): {s.model_input}</div>
-                    <div className="mt-1"><span className="text-muted">output </span>{s.raw_output || "∅"}</div>
-                  </div>
-                ))}
-                <p className="text-xs text-muted">
-                  Model: {result.model} · greedy decoding · {discarded} discarded · classifier {result.timing.classifier_ms} ms
-                </p>
-              </div>
-            </Card>
-          </div>
+          <details className="card group p-5">
+            <summary className="cursor-pointer list-none font-bold text-ink">
+              <span className="mr-2 inline-block text-muted transition group-open:rotate-90">›</span>Under the hood
+              <span className="ml-2 text-sm font-normal text-muted">what the model received and wrote</span>
+            </summary>
+            <div className="mt-4 space-y-3 text-sm">
+              {result.sentences.slice(0, 3).map((s, i) => (
+                <div key={i} className="rounded-lg bg-panel p-3 font-mono text-[12.5px] leading-relaxed">
+                  <div><span className="text-muted">input&nbsp; </span>extract quadruples ({domain.toLowerCase()}): {s.model_input}</div>
+                  <div className="mt-1"><span className="text-muted">output </span>{s.raw_output || "∅"}</div>
+                </div>
+              ))}
+              <p className="text-xs text-muted">
+                Model: {result.model} · greedy decoding · {result.timing.generation_ms_per_sentence} ms per sentence · {discarded} discarded · classifier {result.timing.classifier_ms} ms
+              </p>
+            </div>
+          </details>
         </>
       )}
     </div>

@@ -1,4 +1,4 @@
-from absa.inference import check_numbers, comparison_facts, entity, summarize, summary_facts, topic
+from absa.inference import check_direction, check_numbers, comparison_facts, entity, highlight_spans, summarize, summary_facts, topic
 
 
 def quad(sentiment, category, aspect, confidence=0.9, agrees=True):
@@ -29,16 +29,17 @@ def test_check_numbers_flags_invented_claims():
     assert "2 out of 3" in check_numbers("2 out of 3 customers complain.", facts)
 
 
-def test_comparison_facts_are_computed_not_generated():
+def test_comparison_uses_shares_so_different_sizes_compare_fairly():
     a = summarize(SENTENCES)
     b = summarize(SENTENCES[2:])
     facts = comparison_facts(a, b, "A", "B")
-    assert "A has more negative opinions: 2 vs 0." in facts
-    assert any("biggest difference in complaints is about battery: 2 at A vs 0 at B" in f for f in facts)
-    assert check_numbers("A has 2 vs 0 negative opinions.", facts) == []
+    assert facts[0] == "A: 3 reviews with 3 opinions, 67% of them negative."
+    assert "A has a higher share of negative opinions than B: 67% vs 0%." in facts
+    assert "The biggest difference is battery: complaints in 67% of A reviews vs 0% of B reviews." in facts
+    assert check_numbers("A has a higher share of negative opinions, 67% vs 0%.", facts) == []
     assert check_numbers("A has 0 vs 3 negative opinions.", facts) != []
     same = comparison_facts(a, a, "A", "B")
-    assert any("same number of negative opinions" in f for f in same)
+    assert any("similar share of negative opinions" in f for f in same)
 
 
 def test_numbers_must_belong_to_the_topic_they_are_written_next_to():
@@ -49,3 +50,34 @@ def test_numbers_must_belong_to_the_topic_they_are_written_next_to():
     assert check_numbers("A has 2 complaints about service, while B has 24.", facts) == []
     assert check_numbers("They praise the display and keyboard, with 5 and 2 positive mentions respectively.", facts) == []
     assert check_numbers("They praise the display and keyboard, with 2 and 5 positive mentions respectively.", facts) != []
+
+
+def test_highlights_join_each_count_to_its_topic():
+    facts = summary_facts(summarize(SENTENCES), "Shop", "Laptop")
+    text = "Customers love the display. Shop should fix battery first, with 2 complaints. That is 3 in total."
+    spans = {text[s["start"]:s["end"]]: s["kind"] for s in highlight_spans(text, facts)}
+    assert spans["display"] == "praise"
+    assert spans["battery first, with 2 complaints"] == "complaint"
+    assert spans["Shop"] == "label"
+    assert not any(t.strip().startswith("3") for t in spans)
+
+
+def test_direction_of_more_complaints_is_checked():
+    a = summarize(SENTENCES)
+    b = summarize(SENTENCES[2:])
+    facts = comparison_facts(a, b, "Alpha", "Beta")
+    assert check_direction("Alpha has a higher share of negative opinions than Beta.", facts) == []
+    assert check_direction("Beta receives more complaints than Alpha.", facts) == ["Beta has more complaints"]
+    assert check_direction("Alpha has fewer complaints than Beta.", facts) == ["Alpha has fewer complaints"]
+    same = comparison_facts(summarize(SENTENCES), summarize(SENTENCES), "Alpha", "Beta")
+    assert check_direction("Beta has more complaints than Alpha.", same) == ["Beta has more complaints"]
+
+
+def test_shares_round_half_up_and_clauses_are_checked_separately():
+    from absa.inference import percent
+    assert percent(2, 16) == 13
+    facts = ["A: 16 reviews with 24 opinions, 38% of them negative.",
+             "B: 16 reviews with 26 opinions, 38% of them negative.",
+             "The biggest difference is service: complaints in 25% of B reviews vs 13% of A reviews."]
+    text = "A and B both have 38% negative opinions, but B has more complaints about service (25%) than A (13%)."
+    assert check_numbers(text, facts) == []

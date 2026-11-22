@@ -1,0 +1,17 @@
+review_id,date,source,business,rating,review
+RES-0803,2026-10-01,Zomato (simulated),McDonald's,3,"Cheap and filling, but the burgers are smaller than they used to be."
+RES-0801,2026-10-07,Zomato (simulated),McDonald's,4,"Food comes out fast, my order was ready in under five minutes."
+RES-0805,2026-10-07,Zomato (simulated),McDonald's,4,The McAloo Tikki is great value for students.
+RES-0808,2026-10-08,Google (simulated),McDonald's,3,The ice cream machine was broken again.
+RES-0802,2026-10-12,Google (simulated),McDonald's,5,"The fries are hot, salty and crispy, still the best fast food fries."
+RES-0807,2026-10-12,Google (simulated),McDonald's,4,Self order kiosks make ordering quick and easy.
+RES-0806,2026-10-15,Zomato (simulated),McDonald's,2,Tables were sticky and the floor was dirty.
+RES-0804,2026-10-16,Zomato (simulated),McDonald's,2,The fries were cold and soggy and the burger was squashed.
+RES-0810,2026-11-07,Zomato (simulated),McDonald's,3,Delivery was quick but the drink spilled inside the bag.
+RES-0811,2026-11-07,Zomato (simulated),McDonald's,5,Open late and always reliable on a road trip.
+RES-0809,2026-11-08,Zomato (simulated),McDonald's,4,Happy Meal toys kept my kids busy and the staff were patient with them.
+RES-0816,2026-11-13,Google (simulated),McDonald's,3,The coffee from McCafe is okay but nothing special.
+RES-0813,2026-11-16,Zomato (simulated),McDonald's,4,The McFlurry is a great treat and the price is fair.
+RES-0812,2026-11-20,Google (simulated),McDonald's,2,The staff got our order wrong and it took ages to fix.
+RES-0814,2026-11-26,Google (simulated),McDonald's,3,Taste is consistent but the menu rarely changes.
+RES-0815,2026-11-27,Google (simulated),McDonald's,4,Clean washrooms and plenty of seating at this outlet.

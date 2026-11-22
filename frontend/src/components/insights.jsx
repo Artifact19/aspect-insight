@@ -2,16 +2,21 @@ import React, { useEffect, useState } from "react";
 import { SENTIMENT_COLORS, api, pct, titleCase } from "../lib.js";
 import { Card, ErrorBox, Spinner } from "./ui.jsx";
 
-export function DemoPicker({ onLoad, disabled, filterDomain }) {
+export function DemoPicker({ onLoad, disabled, filterDomain, placeholder = "Load a demo product…" }) {
   const [files, setFiles] = useState([]);
   useEffect(() => { api.demoList().then(setFiles).catch(() => setFiles([])); }, []);
   const shown = filterDomain ? files.filter((f) => f.domain === filterDomain) : files;
   if (!shown.length) return null;
+  const domains = [...new Set(shown.map((f) => f.domain))];
   return (
-    <select className="input w-auto py-2 text-sm" disabled={disabled} value=""
+    <select className="input w-auto py-2 text-sm font-semibold" disabled={disabled} value=""
       onChange={async (e) => { if (e.target.value) onLoad(await api.demoFile(e.target.value)); }}>
-      <option value="">Load a demo file…</option>
-      {shown.map((f) => <option key={f.name} value={f.name}>{f.label} · {f.reviews} reviews</option>)}
+      <option value="">{placeholder}</option>
+      {domains.map((d) => (
+        <optgroup key={d} label={d}>
+          {shown.filter((f) => f.domain === d).map((f) => <option key={f.name} value={f.name}>{f.label}</option>)}
+        </optgroup>
+      ))}
     </select>
   );
 }
@@ -31,9 +36,6 @@ export function Highlights({ summary, sentiment, title, subtitle, onShow, limit 
                   <div className="font-bold">{titleCase(c.name)}</div>
                   {c.top_aspects?.[sentiment]?.length > 0 && (
                     <div className="mt-0.5 text-xs text-muted">mentioned as: {c.top_aspects[sentiment].join(", ")}</div>
-                  )}
-                  {c.subtopics?.length > 1 && (
-                    <div className="mt-0.5 text-xs text-muted">covers: {c.subtopics.join(", ")}</div>
                   )}
                 </div>
                 <div className="text-right">
@@ -59,7 +61,41 @@ export function Highlights({ summary, sentiment, title, subtitle, onShow, limit 
   );
 }
 
-export function SummaryCard({ domain, batches, title = "Summary for the owner" }) {
+export const MARKS = {
+  praise: { color: "#BDEBD3", label: "Praised" },
+  complaint: { color: "#FFD0C2", label: "Complaint" },
+};
+
+function marker(color) {
+  return { background: `linear-gradient(104deg, transparent 0.25em, ${color} 0.25em, ${color} calc(100% - 0.25em), transparent calc(100% - 0.25em))`,
+    padding: "0.1em 0.3em", margin: "0 -0.1em", borderRadius: "0.35em", boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" };
+}
+
+function underMarker(color) {
+  return { background: `linear-gradient(transparent 62%, ${color} 62%, ${color} 92%, transparent 92%)`, padding: "0 0.05em" };
+}
+
+export function HighlightedSummary({ text, spans = [], labelColors = {} }) {
+  const parts = [];
+  let pos = 0;
+  spans.forEach((h, i) => {
+    if (h.start < pos) return;
+    if (h.start > pos) parts.push(text.slice(pos, h.start));
+    const piece = text.slice(h.start, h.end);
+    if (h.kind === "label") {
+      parts.push(<b key={i} className="font-extrabold" style={{ color: labelColors[h.label] || "#2E2A27" }}>{piece}</b>);
+    } else if (h.kind.endsWith("_detail")) {
+      parts.push(<span key={i} style={underMarker(MARKS[h.kind.replace("_detail", "")].color)}>{piece}</span>);
+    } else {
+      parts.push(<mark key={i} className="font-semibold text-ink" style={marker(MARKS[h.kind].color)}>{piece}</mark>);
+    }
+    pos = h.end;
+  });
+  if (pos < text.length) parts.push(text.slice(pos));
+  return <p className="text-[17px] leading-9">{parts}</p>;
+}
+
+export function SummaryCard({ domain, batches, title = "Summary", labelColors = {} }) {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -76,27 +112,37 @@ export function SummaryCard({ domain, batches, title = "Summary for the owner" }
   const ok = result && result.unsupported_numbers.length === 0;
 
   return (
-    <Card title={title} subtitle="Written by an LLM (Qwen2.5-1.5B-Instruct) using only the extracted facts; every number is checked automatically"
-      right={<button className="btn-primary" onClick={run} disabled={busy}>{result ? "Write again" : "Write summary"}</button>}>
+    <Card title={title} subtitle="Written by an LLM from the extracted facts, with every number checked"
+      right={<button className={result ? "btn-ghost" : "btn-primary"} onClick={run} disabled={busy}>{result ? "Write again" : "Write summary"}</button>}>
       {busy && <Spinner text="Writing the summary (the first time loads the model, up to a minute)…" />}
       <ErrorBox error={error} />
-      {!result && !busy && <p className="text-sm text-muted">Press “Write summary” to turn the analysis into a short paragraph.</p>}
+      {!result && !busy && <p className="text-sm text-muted">Press “Write summary” for a short paragraph about these reviews.</p>}
       {result && (
-        <div className="space-y-3">
-          <p className="text-[16px] leading-8">{result.text}</p>
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <span className={`rounded-full px-2.5 py-1 font-bold ${ok ? "bg-[#E3F3EF] text-[#0B6B59]" : "bg-[#FBECE8] text-[#8E3B2A]"}`}>
-              {ok ? "✓ Every number matches the extracted data" : `⚠ Not in the data: ${result.unsupported_numbers.join(", ")}`}
+        <div className="space-y-4">
+          <HighlightedSummary text={result.text} spans={result.highlights} labelColors={labelColors} />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-3 text-xs">
+            {Object.entries(MARKS).map(([k, m]) => (
+              <span key={k} className="inline-flex items-center gap-1.5 text-muted">
+                <span className="h-3 w-5 rounded" style={{ background: m.color }} />{m.label}
+              </span>
+            ))}
+            {Object.entries(labelColors).map(([l, c]) => (
+              <span key={l} className="inline-flex items-center gap-1.5 font-bold" style={{ color: c }}>
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />{l}
+              </span>
+            ))}
+            <span className={`ml-auto rounded-full px-2.5 py-1 font-bold ${ok ? "bg-[#E3F3EF] text-[#0B6B59]" : "bg-[#FBECE8] text-[#8E3B2A]"}`}>
+              {ok ? "✓ Every number matches the data" : `⚠ Not in the data: ${result.unsupported_numbers.join(", ")}`}
             </span>
-            <span className="text-muted">{(result.ms / 1000).toFixed(1)} s · {result.model}</span>
             <button className="font-bold text-brand-500 hover:underline" onClick={() => setShowFacts((v) => !v)}>
-              {showFacts ? "Hide" : "Show"} the facts it was given
+              {showFacts ? "Hide facts" : "Show facts"}
             </button>
           </div>
           {showFacts && (
-            <ul className="space-y-1 rounded-lg bg-panel p-3 text-sm text-muted">
-              {result.facts.map((f, i) => <li key={i}>• {f}</li>)}
-            </ul>
+            <div className="rounded-lg bg-panel p-3 text-sm text-muted">
+              <ul className="space-y-1">{result.facts.map((f, i) => <li key={i}>• {f}</li>)}</ul>
+              <div className="mt-2 text-xs">{(result.ms / 1000).toFixed(1)} s · {result.model}</div>
+            </div>
           )}
         </div>
       )}

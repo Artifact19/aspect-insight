@@ -11,6 +11,7 @@ let tabId = null;
 let page = null;
 let capture = null;
 let marked = false;
+let loading = false;
 
 async function api(path, body) {
   const res = await fetch(`${APP}${path}`, {
@@ -29,6 +30,8 @@ async function api(path, body) {
 function show(id, on) { $(id).classList.toggle("hidden", !on); }
 function setError(msg) { $("error").textContent = msg || ""; show("error", !!msg); }
 function setBusy(msg) { $("busy-text").textContent = msg || ""; show("busy", !!msg); $("read").disabled = !!msg; }
+function setNote(msg) { $("note").textContent = msg || ""; show("note", !!msg); }
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 async function checkApp() {
   const s = $("status");
@@ -60,9 +63,10 @@ async function askPage(type, extra = {}) {
 }
 
 async function inspectPage() {
+  if (loading) return;
   const tab = await activeTab();
   if (!tab?.id) return;
-  if (tab.id !== tabId) { capture = null; show("result", false); }
+  if (tab.id !== tabId) { capture = null; show("result", false); setNote(""); }
   tabId = tab.id;
   const url = tab.url || "";
   if (!/^https?:/i.test(url)) {
@@ -89,7 +93,7 @@ async function inspectPage() {
 function renderResult(cap) {
   const s = cap.summary;
   const total = s.opinions || 1;
-  $("meta").textContent = `${cap.review_count} reviews · ${s.opinions} opinions`;
+  $("meta").textContent = `${cap.review_count} reviews · ${s.opinions} opinions${cap.updated ? " · updated this page's earlier report" : ""}`;
   $("bar").innerHTML = ["positive", "neutral", "negative"].filter((k) => s.sentiment[k])
     .map((k) => `<div style="width:${(100 * s.sentiment[k]) / total}%;background:${COLORS[k]}"></div>`).join("");
   $("legend").innerHTML = ["positive", "neutral", "negative"]
@@ -112,9 +116,11 @@ async function read() {
     setError("Start the app first: double-click Start.bat in the project folder, then try again.");
     return;
   }
+  setNote("");
   await inspectPage();
   if (!page) { setError("This tab is not a web page the extension can read."); return; }
-  if (!page.reviews.length) { setError("No reviews found. Scroll to the reviews so they load, or select some review text, then press the button again."); return; }
+  if ($("auto").checked) await loadMore();
+  if (!page.reviews.length) { setError("No reviews found. Open the page's reviews section, or select some review text, then press the button again."); return; }
   setBusy(`Reading ${page.reviews.length} reviews with the local models…`);
   try {
     capture = await api("/api/captures", {
@@ -129,6 +135,35 @@ async function read() {
   }
 }
 
+// Asks the page to scroll, open "show more" buttons and fetch further review pages, then uses what it collected.
+async function loadMore() {
+  loading = true;
+  setBusy("Loading more reviews from the page…");
+  try {
+    const res = await askPage("LOAD_AND_EXTRACT", { pages: true });
+    if (res?.error) throw new Error(res.error);
+    if (res?.reviews?.length >= page.reviews.length) page = res;
+    const n = page.reviews.length;
+    $("found").textContent = n ? `${plural(n, "review")} found` : "No reviews found yet";
+    const fromPages = n - (page.on_page ?? n);
+    const parts = [];
+    if (fromPages > 0) parts.push(`${page.on_page} on this page and ${fromPages} from ${plural(page.pages, "more review page")}. Only the ones on this page can be marked.`);
+    if (page.note) parts.push(`Stopped early: ${page.note}.`);
+    setNote(parts.join(" "));
+  } catch (e) {
+    setNote(`Could not load more reviews (${e.message}), so only the ones already on the page were read.`);
+  } finally {
+    loading = false;
+    setBusy("");
+  }
+}
+
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg?.type === "LOAD_PROGRESS" && loading && sender.tab?.id === tabId) {
+    setBusy(`Loading more reviews… ${msg.count} so far`);
+  }
+});
+
 async function toggleMarks() {
   if (!capture) return;
   if (marked) {
@@ -142,6 +177,8 @@ async function toggleMarks() {
   }
 }
 
+try { $("auto").checked = localStorage.getItem("autoLoad") !== "0"; } catch {}
+$("auto").addEventListener("change", () => { try { localStorage.setItem("autoLoad", $("auto").checked ? "1" : "0"); } catch {} });
 $("read").addEventListener("click", read);
 $("mark").addEventListener("click", toggleMarks);
 $("open").addEventListener("click", () => capture && chrome.tabs.create({ url: `${APP}/#/r/${capture.id}` }));

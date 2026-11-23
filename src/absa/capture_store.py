@@ -44,6 +44,40 @@ def review_key(text: str, author: str = "") -> str:
     return hashlib.sha256(f"{norm}|{(author or '').strip().lower()}".encode("utf-8")).hexdigest()
 
 
+RE_AMAZON_ASIN = re.compile(r"/(?:dp|gp/product|product-reviews)/([A-Z0-9]{10})", re.IGNORECASE)
+RE_FLIPKART_PID = re.compile(r"[?&]pid=([A-Z0-9]+)", re.IGNORECASE)
+# Sites whose path alone names the product or place; their query only holds paging, sorting or session values.
+PATH_ONLY_HOSTS = ("zomato.", "goodreads.", "tripadvisor.", "booking.")
+# Query parameters that never change which item a page is about (tracking, paging, sorting).
+RE_IGNORED_PARAM = re.compile(r"^(utm(_\w+)?|ref|ref_|fbclid|gclid|msclkid|mc_[a-z]+|_ga|srsltid|"
+                              r"page|pagenumber|p|sort|sortby|order|filter|lang|hl|currency)$", re.IGNORECASE)
+
+
+def page_key(url: str) -> str:
+    """The product or place a page is about, so reading the same thing again updates its report.
+
+    Amazon pages share their ASIN, Flipkart pages their pid, and Zomato, Goodreads, Tripadvisor and Booking.com
+    pages their path. Any other page is its host, path and the query parameters that can name an item (tracking,
+    paging and sorting parameters dropped), so two different items on the same script never share a report.
+    Empty for pasted text and demo files.
+    """
+    m = re.match(r"https?://(?:www\.|m\.)?([^/?#]+)([^?#]*)(?:\?([^#]*))?", (url or "").strip(), re.IGNORECASE)
+    if not m:
+        return ""
+    host, path, query = m.group(1).lower(), m.group(2).rstrip("/"), m.group(3) or ""
+    if "amazon." in host and (asin := RE_AMAZON_ASIN.search(url)):
+        return f"{host}/asin/{asin.group(1).upper()}"
+    if "flipkart." in host and (pid := RE_FLIPKART_PID.search(url)):
+        return f"{host}/pid/{pid.group(1).upper()}"
+    if "zomato." in host:
+        path = re.sub(r"/(reviews|order|menu|photos|book)$", "", path)
+    key = f"{host}{path.lower()}"
+    if any(h in host for h in PATH_ONLY_HOSTS):
+        return key
+    params = sorted(p for p in query.split("&") if p and not RE_IGNORED_PARAM.match(p.partition("=")[0]))
+    return f"{key}?{'&'.join(params)}" if params else key
+
+
 def deduplicate(reviews: Sequence[dict]) -> tuple[list[dict], int]:
     """Cleaned, unique reviews and the number dropped as duplicates or too short."""
     kept, seen, skipped = [], set(), 0
@@ -105,15 +139,32 @@ class CaptureStore:
         return conn
 
     # ------------------------------------------------------------------ captures
+    def find_by_page(self, source_url: str, domain: str) -> str | None:
+        """Id of the latest report for the same product or place (see `page_key`) and domain, if any."""
+        key = page_key(source_url)
+        if not key:
+            return None
+        with self._connect() as conn:
+            rows = conn.execute("SELECT id, source_url FROM captures WHERE domain = ? AND source_url != '' "
+                                "ORDER BY created_at DESC", (domain,)).fetchall()
+        return next((r["id"] for r in rows if page_key(r["source_url"]) == key), None)
+
     def save_capture(self, *, title: str, source_url: str, source: str, domain: str, raw_count: int,
                      review_count: int, skipped: int, payload: dict) -> dict:
-        cid = uuid.uuid4().hex[:10]
+        """Save a report. Reading the same page again replaces that page's report (same id, so links keep working)
+        instead of adding another one; the result's `updated` says which happened."""
+        existing = self.find_by_page(source_url, domain)
+        cid = existing or uuid.uuid4().hex[:10]
+        values = (title, source_url, source, domain, now_iso(), raw_count, review_count, skipped,
+                  json.dumps(payload["summary"], ensure_ascii=False), json.dumps(payload, ensure_ascii=False))
         with self._connect() as conn:
-            conn.execute(
-                "INSERT INTO captures VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (cid, title, source_url, source, domain, now_iso(), raw_count, review_count, skipped,
-                 json.dumps(payload["summary"], ensure_ascii=False), json.dumps(payload, ensure_ascii=False)))
-        return self.get_capture(cid)
+            if existing:
+                conn.execute("UPDATE captures SET title = ?, source_url = ?, source = ?, domain = ?, created_at = ?, "
+                             "raw_count = ?, review_count = ?, skipped = ?, summary_json = ?, payload_json = ? "
+                             "WHERE id = ?", (*values, cid))
+            else:
+                conn.execute("INSERT INTO captures VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (cid, *values))
+        return {**self.get_capture(cid), "updated": bool(existing)}
 
     def list_captures(self) -> list[dict]:
         with self._connect() as conn:

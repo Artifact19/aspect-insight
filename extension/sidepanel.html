@@ -29,9 +29,14 @@
           <option>Laptop</option><option>Restaurant</option><option>Hotel</option><option>Clothing</option><option>Books</option>
         </select>
       </label>
+      <label class="check">
+        <input type="checkbox" id="auto" checked />
+        <span>Load more reviews first <span class="muted">(scrolls the page, opens "show more" and reads the next review pages)</span></span>
+      </label>
       <button id="read" class="btn btn-primary">Read the reviews</button>
-      <p id="hint" class="hint">Scroll down to the reviews first so the page loads them. You can also select review text and press the button.</p>
+      <p id="hint" class="hint">Reads up to 100 reviews. You can also select review text and press the button.</p>
       <div id="busy" class="busy hidden"><span class="spinner"></span><span id="busy-text">Reading…</span></div>
+      <p id="note" class="hint hidden"></p>
       <div id="error" class="error hidden"></div>
     </section>
 

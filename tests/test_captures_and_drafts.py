@@ -8,7 +8,44 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
 from absa.actions import verify_action_draft  # noqa: E402
-from absa.capture_store import CaptureStore, clean_review_text, deduplicate, review_key  # noqa: E402
+from absa.capture_store import CaptureStore, clean_review_text, deduplicate, page_key, review_key  # noqa: E402
+
+
+def test_page_key_groups_pages_about_the_same_thing():
+    assert page_key("https://www.amazon.in/Some-Laptop/dp/B0ABCDEF12/ref=sr_1_1?th=1") == \
+        page_key("https://amazon.in/product-reviews/B0ABCDEF12/?pageNumber=3") == "amazon.in/asin/B0ABCDEF12"
+    assert page_key("https://www.zomato.com/pune/mainland-china-senapati-bapat-road/reviews?page=2") == \
+        page_key("https://www.zomato.com/pune/mainland-china-senapati-bapat-road")
+    assert page_key("https://www.flipkart.com/x/p/itm1?pid=COMABC&lid=1") == \
+        page_key("https://www.flipkart.com/x/product-reviews/itm1?pid=comabc&page=2")
+    assert page_key("https://example.com/a/") == page_key("https://example.com/a?utm=1#top") != page_key("https://example.com/b")
+    assert page_key("") == ""
+    # Items named in the query stay apart; tracking and paging parameters do not split one item.
+    assert page_key("https://shop.example.com/item.php?id=5") != page_key("https://shop.example.com/item.php?id=6")
+    assert page_key("https://shop.example.com/item.php?id=5&utm_source=x&page=2") == \
+        page_key("https://shop.example.com/item.php?page=1&id=5")
+    assert page_key("https://www.amazon.in/s?k=laptop") != page_key("https://www.amazon.in/s?k=phone")
+    assert page_key("https://www.booking.com/hotel/in/taj.html?aid=1&sid=abc") == \
+        page_key("https://www.booking.com/hotel/in/taj.html?aid=2&sid=xyz")
+
+
+def test_reading_the_same_page_again_updates_its_report(tmp_path):
+    store = CaptureStore(tmp_path / "c.db")
+    base = dict(source="zomato", domain="Restaurant", raw_count=1, skipped=0)
+    payload = lambda n: {"summary": {"opinions": n}, "reviews": []}  # noqa: E731
+    first = store.save_capture(title="Mainland China", source_url="https://www.zomato.com/pune/mc/reviews",
+                               review_count=5, payload=payload(5), **base)
+    again = store.save_capture(title="Mainland China", source_url="https://www.zomato.com/pune/mc/reviews?page=2",
+                               review_count=61, payload=payload(61), **base)
+    other = store.save_capture(title="Other", source_url="https://www.zomato.com/pune/other", review_count=3,
+                               payload=payload(3), **base)
+    pasted = [store.save_capture(title="Pasted", source_url="", review_count=2, payload=payload(2), **base)
+              for _ in range(2)]
+    assert not first["updated"] and again["updated"] and again["id"] == first["id"]
+    assert store.get_capture(first["id"])["review_count"] == 61
+    assert not other["updated"] and other["id"] != first["id"]
+    assert pasted[0]["id"] != pasted[1]["id"]  # pasted text has no page, so it is never merged
+    assert len(store.list_captures()) == 4
 
 
 def test_cleaning_and_duplicates():

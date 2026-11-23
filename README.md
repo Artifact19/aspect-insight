@@ -104,7 +104,11 @@ Qwen2.5-1.5B-Instruct) are downloaded from Hugging Face on the first start and c
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and choose the `extension/` folder.
-3. Open a product page, scroll to its reviews, click the Aspect Insight icon and press **Read the reviews**.
+3. Open a product page, click the Aspect Insight icon and press **Read the reviews**. With **Load more reviews first**
+   on (the default), it first scrolls the page, presses its "show more reviews" buttons, opens truncated reviews and, on
+   Amazon, Flipkart (up to 5 pages) and Zomato (up to 15 pages), reads the next review pages in the background, up to
+   100 reviews in all. Reading the same product or restaurant again (on Amazon, Flipkart, Zomato, Goodreads,
+   Tripadvisor or Booking.com) updates its existing report instead of adding one.
    **Show on page** marks the aspects on the page; **Open full report** opens the report in the app.
 
 Reports are saved in `data/captures.db` on this computer.
@@ -112,7 +116,7 @@ Reports are saved in `data/captures.db` on this computer.
 ## Tests
 
 ```bash
-python -m pytest        # 39 tests: data, metrics, parsing, summaries, number checks, captures and drafts
+python -m pytest        # 41 tests: data, metrics, parsing, summaries, number checks, captures and page matching
 ```
 
 ## Training and evaluation

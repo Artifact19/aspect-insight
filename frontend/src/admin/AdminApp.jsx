@@ -5,7 +5,6 @@ import Reports from "./Reports.jsx";
 import Analyze from "./Analyze.jsx";
 import Compare from "./Compare.jsx";
 import ModelLab from "./ModelLab.jsx";
-import Drafts from "./Drafts.jsx";
 import Evaluation from "./Evaluation.jsx";
 
 const SECTIONS = [
@@ -13,7 +12,6 @@ const SECTIONS = [
   { id: "reports", label: "Reports", icon: "database", title: "Reports", hint: "Every captured review set: categories, all extracted opinions and timing", Component: Reports },
   { id: "analyze", label: "Analyze", icon: "search", title: "Analyze one review", hint: "The quadruples for a single review, with the raw model input and output", Component: Analyze },
   { id: "compare", label: "Compare", icon: "scale", title: "Compare two products", hint: "Topic by topic, as a share of each side's reviews", Component: Compare },
-  { id: "drafts", label: "Replies", icon: "mail", title: "Reply and ticket drafts", hint: "The LLM drafts, rules check the draft, a person approves it", Component: Drafts },
   { id: "lab", label: "Model lab", icon: "flask", title: "Model lab", hint: "One sentence through several generators and decoding strategies", Component: ModelLab },
   { id: "evaluation", label: "Evaluation", icon: "chart", title: "Evaluation", hint: "Test-set results against the published MEMD-ABSA baselines", Component: Evaluation },
 ];

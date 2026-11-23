@@ -34,10 +34,10 @@ books, clothing, hotels, laptops and restaurants).
   significant difference) and beats prompting Qwen2.5-7B with five retrieved examples (30.4) by about 20 points.
 - **Rare-class study.** Five ways of handling the rare Neutral class (2.2 % of opinions), with McNemar tests per seed
   and temperature scaling so that the confidences shown are calibrated.
-- **Grounded generation.** The brief, the answers to questions and the reply drafts are written by an LLM from facts
-  computed in code. Every number, "X vs Y" pair and topic count in the text is checked against those facts before it is
-  shown, and reply drafts are also checked against business rules (no refunds, discounts or free replacements) and wait
-  for a person to approve them.
+- **Grounded generation.** The brief and the answers to questions are written by an LLM from facts computed in code.
+  Every number, "X vs Y" pair and topic count in the text is checked against those facts before it is shown.
+- **Downloadable report.** Any product's analysis can be saved as a plain, printable PDF: summary, sentiment split,
+  findings by topic with quotes, category breakdown, method notes and every extracted opinion.
 
 ## The application
 
@@ -46,17 +46,16 @@ books, clothing, hotels, laptops and restaurants).
 | Part | What it shows |
 |---|---|
 | Reports | Every review set read so far, from the extension, pasted text or a demo product |
-| Report | Sentiment split, a three-sentence brief with every number checked, what people love and what needs fixing (with quotes), a question box that answers from the reviews and cites them, and every review with its aspects highlighted |
+| Report | Sentiment split, a three-sentence brief with every number checked, what people love and what needs fixing (with quotes), a question box that answers from the reviews and cites them, and every review with its aspects highlighted. **Download report** saves it as a PDF |
 
 **Admin console** (`http://127.0.0.1:8000/admin`): the depth behind each report.
 
 | Section | What it does |
 |---|---|
 | Overview | The processing pipeline, the models and their status, recent reports |
-| Reports | Categories chart, every extracted quadruple with the checker's verdict, timing, CSV export, delete |
+| Reports | Categories chart, every extracted quadruple with the checker's verdict, timing, PDF report and CSV export, delete |
 | Analyze | One review: quadruple table, calibrated confidence and the raw model input and output |
 | Compare | Two products side by side, compared by the share of each side's reviews that praise or complain about a topic |
-| Replies | Reply or ticket drafts checked against business rules, approved or rejected by a person |
 | Model lab | One sentence through several generators with greedy, beam-search or sampling decoding, optionally constrained |
 | Evaluation | Test-set results, the comparison with the published results and the error analysis |
 
@@ -72,7 +71,7 @@ Flan-T5-base + domain ─► "[A] battery life [C] battery - operation performan
 parser ─► quadruples ─► DeBERTa-v3-small sentiment check (temperature-scaled) ─► topic counts and quotes
    │
    ▼
-Qwen2.5-1.5B-Instruct writes the brief / answer / draft from the counts ─► every number and claim is verified
+Qwen2.5-1.5B-Instruct writes the brief / answer from the counts ─► every number and claim is verified
 ```
 
 | Component | Model | Training |
@@ -81,7 +80,7 @@ Qwen2.5-1.5B-Instruct writes the brief / answer / draft from the counts ─► e
 | Quadruple generator (compared) | Qwen2.5-1.5B-Instruct | LoRA, rank 16, 18.5 M trainable parameters |
 | Prompting baseline | Qwen2.5-7B-Instruct | none: instruction, category list and 5 TF-IDF-retrieved examples |
 | Sentiment check | DeBERTa-v3-small | class-weighted cross-entropy, temperature scaling |
-| Brief, answers and drafts | Qwen2.5-1.5B-Instruct | none: phrases facts computed in code |
+| Brief and answers | Qwen2.5-1.5B-Instruct | none: phrases facts computed in code |
 
 ## Running it
 
@@ -108,7 +107,7 @@ Qwen2.5-1.5B-Instruct) are downloaded from Hugging Face on the first start and c
 3. Open a product page, scroll to its reviews, click the Aspect Insight icon and press **Read the reviews**.
    **Show on page** marks the aspects on the page; **Open full report** opens the report in the app.
 
-Reports and drafts are saved in `data/captures.db` on this computer.
+Reports are saved in `data/captures.db` on this computer.
 
 ## Tests
 
@@ -142,7 +141,7 @@ on the test set without any retraining; results are in `outputs/results/t5/const
 | `frontend/src/admin/` | Admin console sections |
 | `frontend/src/components/` | Shared interface components |
 | `extension/` | Chrome extension (side panel and page reader) |
-| `src/absa/` | Data handling, models, metrics, inference, grounded drafts and the capture store |
+| `src/absa/` | Data handling, models, metrics, inference, grounded text checks and the capture store |
 | `scripts/` | Data preparation, training, evaluation and data generation |
 | `configs/` | Experiment settings |
 | `notebooks/` | Colab runners |

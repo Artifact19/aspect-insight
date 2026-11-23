@@ -58,9 +58,6 @@ export const api = {
   deleteCapture: (id) => request(`/api/captures/${id}`, { method: "DELETE" }),
   brief: (id, refresh = false) => request(`/api/captures/${id}/brief${refresh ? "?refresh=true" : ""}`, { method: "POST" }),
   ask: (id, question) => request(`/api/captures/${id}/ask`, { method: "POST", body: { question } }),
-  drafts: (captureId) => request(`/api/drafts${captureId ? `?capture_id=${captureId}` : ""}`),
-  createDraft: (body) => request("/api/drafts", { method: "POST", body }),
-  decideDraft: (id, body) => request(`/api/drafts/${id}/decide`, { method: "POST", body }),
 };
 
 export function timeAgo(iso) {

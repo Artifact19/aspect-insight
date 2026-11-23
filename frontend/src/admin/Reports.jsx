@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { SENTIMENT_COLORS, SENTIMENTS, SOURCES, api, download, hostOf, shortTitle, timeAgo, titleCase, toCsv } from "../lib.js";
 import { Card, ErrorBox, Icon, SentimentBadge, SentimentSplit, Spinner, Stat, Tabs } from "../components/ui.jsx";
+import DownloadReport from "../components/DownloadReport.jsx";
 
 function Detail({ id, onDeleted }) {
   const [cap, setCap] = useState(null);
@@ -44,6 +45,7 @@ function Detail({ id, onDeleted }) {
             {cap.source_url && <a href={cap.source_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-brand-500 hover:underline">{hostOf(cap.source_url)}</a>}
           </div>
           <a className="btn-ghost" href={`/#/r/${cap.id}`}>Open report</a>
+          <DownloadReport capture={cap} />
           <button className="btn-ghost text-neg" onClick={remove}><Icon name="trash" className="h-4 w-4" />Delete</button>
         </div>
         <div className="mt-4"><SentimentSplit counts={s.sentiment} /></div>

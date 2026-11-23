@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { SENTIMENT_COLORS, SOURCES, api, hostOf, shortTitle, titleCase, timeAgo } from "../lib.js";
 import { ErrorBox, Highlighted, Icon, SentimentBadge, SentimentSplit, Spinner } from "../components/ui.jsx";
 import { HighlightedSummary, MARKS } from "../components/insights.jsx";
+import DownloadReport from "../components/DownloadReport.jsx";
 
 const STARTERS = {
   Laptop: ["How is the battery life?", "What do people complain about most?", "Is it good for gaming?"],
@@ -229,7 +230,10 @@ export default function Report({ id }) {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <a href="#/" className="btn-quiet -ml-3"><Icon name="back" />All reports</a>
-        <a href={`/admin#reports/${cap.id}`} className="btn-quiet">Details<Icon name="arrow" className="h-4 w-4" /></a>
+        <div className="flex items-center gap-1">
+          <DownloadReport capture={cap} className="btn-quiet" />
+          <a href={`/admin#reports/${cap.id}`} className="btn-quiet">Details<Icon name="arrow" className="h-4 w-4" /></a>
+        </div>
       </div>
 
       <section className="card p-6 sm:p-7">

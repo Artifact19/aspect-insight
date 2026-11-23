@@ -7,7 +7,7 @@ const PIPELINE = [
   { name: "Flan-T5-base", detail: "writes every opinion as text, with the domain in its input" },
   { name: "Parser", detail: "turns the text into (aspect, category, opinion, sentiment)" },
   { name: "DeBERTa-v3-small", detail: "checks each sentiment, calibrated confidence" },
-  { name: "Qwen2.5-1.5B-Instruct", detail: "writes the brief, answers and drafts from computed facts" },
+  { name: "Qwen2.5-1.5B-Instruct", detail: "writes the brief and answers from computed facts" },
   { name: "Checker", detail: "every number and claim must appear in the facts" },
 ];
 
@@ -19,12 +19,9 @@ const ROLES = {
 
 export default function Overview({ health }) {
   const [captures, setCaptures] = useState([]);
-  const [drafts, setDrafts] = useState([]);
-  useEffect(() => {
-    api.captures().then(setCaptures).catch(() => {});
-    api.drafts().then(setDrafts).catch(() => {});
-  }, []);
+  useEffect(() => { api.captures().then(setCaptures).catch(() => {}); }, []);
   const reviews = captures.reduce((a, c) => a + c.review_count, 0);
+  const opinions = captures.reduce((a, c) => a + (c.opinions || 0), 0);
   const live = captures.filter((c) => !["demo", "pasted"].includes(c.source)).length;
 
   return (
@@ -32,7 +29,7 @@ export default function Overview({ health }) {
       <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Reports saved" value={captures.length} hint={`${live} read from live pages`} />
         <Stat label="Reviews analysed" value={reviews} hint="across all reports" />
-        <Stat label="Drafts approved" value={drafts.filter((d) => d.status === "approved").length} hint={`${drafts.length} drafted in total`} />
+        <Stat label="Opinions extracted" value={opinions} hint={`${(opinions / Math.max(1, reviews)).toFixed(1)} per review`} />
         <Stat label="Classifier temperature" value={health.classifier_temperature} hint="fitted on the Dev set" />
       </div>
 
@@ -65,7 +62,7 @@ export default function Overview({ health }) {
                 </tr>
               ))}
               <tr><td className="font-semibold">DeBERTa-v3-small</td><td className="text-ink2">Sentiment check, temperature scaled</td><td><span className="chip-soft bg-possoft">Loaded</span></td></tr>
-              <tr><td className="font-semibold">Qwen2.5-1.5B-Instruct</td><td className="text-ink2">Writes briefs, answers and drafts</td><td><span className="chip-soft">Loads on first use</span></td></tr>
+              <tr><td className="font-semibold">Qwen2.5-1.5B-Instruct</td><td className="text-ink2">Writes briefs and answers</td><td><span className="chip-soft">Loads on first use</span></td></tr>
             </tbody>
           </table>
         </Card>

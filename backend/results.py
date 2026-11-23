@@ -52,13 +52,7 @@ def collect() -> dict:
             overall[label] = {t: round(sum(float(r[t]) for r in rows) / len(rows), 2)
                               for t in ("AE", "ASPE", "CS", "AOS", "ACS", "ACOS")}
 
-    speed = {}
-    for label, path, exp in (("Flan-T5 + domain", "t5", "all_domains_tagged"),
-                             ("Qwen2.5-1.5B LoRA + domain", "qwen", "all_domains_tagged")):
-        ms = [m["ms_per_sentence"] for m in (_json(p) for p in (OUTPUT_DIR / f"runs/{path}/{exp}/model").glob(
-            "seed*/metrics.json")) if m]
-        if ms:
-            speed[label] = round(sum(ms) / len(ms), 1)
+    speed = (_json(RESULTS / "speed.json") or {}).get("ms_per_sentence", {})
 
     prompting = [{"run": r["run"], "model": r["model"], "shots": int(r["shots"]), "selection": r["selection"],
                   "acos": _num(r["ACOS_F1"]), "aos": _num(r["AOS_F1"]), "ms": _num(r["ms_per_sentence"]),
@@ -89,8 +83,9 @@ def collect() -> dict:
     wrong_domain = [{"model": m, "domain": d, "share": round(sum(v) / len(v), 2)} for (m, d), v in wrong_mean.items()]
 
     errors = (t5 or {}).get("errors")
+    constrained = _json(RESULTS / "t5/constrained_decoding.json")
     return {"domains": domains, "overall": overall, "speed_ms": speed, "prompting": prompting, "decoding": decoding,
-            "classifiers": classifiers, "wrong_domain": wrong_domain, "errors": errors,
+            "classifiers": classifiers, "wrong_domain": wrong_domain, "errors": errors, "constrained": constrained,
             "recall_by_group": {"Flan-T5, no domain": (t5 or {}).get("recall_by_group"),
                                 "Qwen2.5-1.5B LoRA + domain": (qwen or {}).get("recall_by_group")},
             "classifier_test_pairs": cls.get("n_test"), "available": bool(t5)}

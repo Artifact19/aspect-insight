@@ -12,3 +12,7 @@ frontend/dist/
 .env
 .tmp.drivedownload/
 .tmp.driveupload/
+
+# Saved reports and locally copied model weights
+data/captures.db
+models/

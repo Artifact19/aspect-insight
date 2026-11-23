@@ -9,7 +9,7 @@ export function DemoPicker({ onLoad, disabled, filterDomain, placeholder = "Load
   if (!shown.length) return null;
   const domains = [...new Set(shown.map((f) => f.domain))];
   return (
-    <select className="input w-auto py-2 text-sm font-semibold" disabled={disabled} value=""
+    <select className="input w-auto py-2 pr-8 text-sm font-semibold" disabled={disabled} value=""
       onChange={async (e) => { if (e.target.value) onLoad(await api.demoFile(e.target.value)); }}>
       <option value="">{placeholder}</option>
       {domains.map((d) => (
@@ -62,8 +62,8 @@ export function Highlights({ summary, sentiment, title, subtitle, onShow, limit 
 }
 
 export const MARKS = {
-  praise: { color: "#BDEBD3", label: "Praised" },
-  complaint: { color: "#FFD0C2", label: "Complaint" },
+  praise: { color: "#CDE5C6", label: "Praised" },
+  complaint: { color: "#F5CDBF", label: "Complaint" },
 };
 
 function marker(color) {
@@ -83,7 +83,7 @@ export function HighlightedSummary({ text, spans = [], labelColors = {} }) {
     if (h.start > pos) parts.push(text.slice(pos, h.start));
     const piece = text.slice(h.start, h.end);
     if (h.kind === "label") {
-      parts.push(<b key={i} className="font-extrabold" style={{ color: labelColors[h.label] || "#2E2A27" }}>{piece}</b>);
+      parts.push(<b key={i} className="font-extrabold" style={{ color: labelColors[h.label] || "#2F2923" }}>{piece}</b>);
     } else if (h.kind.endsWith("_detail")) {
       parts.push(<span key={i} style={underMarker(MARKS[h.kind.replace("_detail", "")].color)}>{piece}</span>);
     } else {
@@ -131,7 +131,7 @@ export function SummaryCard({ domain, batches, title = "Summary", labelColors = 
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />{l}
               </span>
             ))}
-            <span className={`ml-auto rounded-full px-2.5 py-1 font-bold ${ok ? "bg-[#E3F3EF] text-[#0B6B59]" : "bg-[#FBECE8] text-[#8E3B2A]"}`}>
+            <span className={`ml-auto rounded-full px-2.5 py-1 font-bold ${ok ? "bg-possoft text-[#2E6B4B]" : "bg-negsoft text-[#8A3A2D]"}`}>
               {ok ? "✓ Every number matches the data" : `⚠ Not in the data: ${result.unsupported_numbers.join(", ")}`}
             </span>
             <button className="font-bold text-brand-500 hover:underline" onClick={() => setShowFacts((v) => !v)}>
@@ -139,7 +139,7 @@ export function SummaryCard({ domain, batches, title = "Summary", labelColors = 
             </button>
           </div>
           {showFacts && (
-            <div className="rounded-lg bg-panel p-3 text-sm text-muted">
+            <div className="rounded-2xl bg-panel p-3 text-sm text-muted">
               <ul className="space-y-1">{result.facts.map((f, i) => <li key={i}>• {f}</li>)}</ul>
               <div className="mt-2 text-xs">{(result.ms / 1000).toFixed(1)} s · {result.model}</div>
             </div>

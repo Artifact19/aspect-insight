@@ -1,8 +1,10 @@
 # Aspect Insight
 
-**Generative aspect-based sentiment analysis: from raw reviews to what customers praise and criticise.**
+**Generative aspect-based sentiment analysis on live customer reviews, running entirely on your own computer.**
 
-Aspect Insight reads a review and writes out every opinion in it as an **(aspect, category, opinion, sentiment)** quadruple, then turns many reviews into a dashboard that tells a business what to fix first, with evidence.
+Open a product, restaurant or hotel page in Chrome, click the Aspect Insight button, and every opinion in its reviews
+is written out as an **(aspect, category, opinion, sentiment)** quadruple, grouped by topic, checked by a second model
+and summarised in a few verified sentences. Nothing needs an account, an API key or a cloud service.
 
 | Review | Aspect | Category | Opinion | Sentiment |
 |---|---|---|---|---|
@@ -10,91 +12,115 @@ Aspect Insight reads a review and writes out every opinion in it as an **(aspect
 | | plastic build | Laptop - design features | cheap | negative |
 | *It died after two hours.* | *(implicit)* | Battery - operation performance | died | negative |
 
-It is trained and evaluated on [MEMD-ABSA](https://github.com/NUSTM/MEMD-ABSA) (18,104 sentences, five domains: books, clothing, hotels, laptops and restaurants) and compares three ways of using generative models under one evaluation protocol.
+The models are trained and evaluated on [MEMD-ABSA](https://github.com/NUSTM/MEMD-ABSA) (18,104 sentences, five domains:
+books, clothing, hotels, laptops and restaurants).
 
-![Analyze a review](docs/screenshots/step3.png)
+<p>
+  <img src="docs/screenshots/main-report.png" width="49%" alt="A report built from live Amazon reviews">
+  <img src="docs/screenshots/admin-overview.png" width="49%" alt="The admin console">
+</p>
 
 ## Highlights
 
-- **Matches the published results.** One Flan-T5-base model that is told the review's domain is within 2.5 F1 points of the best published models on four of five domains (exact-match ACOS F1, mean of three seeds). Qwen2.5-1.5B with LoRA exceeds the best published Restaurant score.
-- **A diagnosed and fixed failure.** Without the domain, 26 % of a single model's Laptop predictions used categories from other domains. Naming the domain in the input cut this to 0.4 % and raised Laptop ACOS F1 from 22.7 to 34.8.
-- **Fine-tuning versus prompting.** Flan-T5 (49.7 ACOS F1, 35 ms per sentence) ties Qwen2.5-1.5B LoRA (50.2, not a significant difference) and beats prompting Qwen2.5-7B with five retrieved examples (30.4) by about 20 points.
-- **Rare-class study.** Five ways of handling the rare Neutral class (2.2 % of opinions), including balanced bagging and LLM-generated training data, with McNemar tests per seed and temperature scaling for calibrated confidences.
-- **Grounded summaries.** The dashboard's written summary is produced by an LLM from facts computed in code, and every number, "X vs Y" pair, "N out of M" claim and "which side has more complaints" claim in it is checked against those facts before it is shown. Praised topics and complaints are highlighted together with their counts so the summary can be read at a glance.
+- **Live reviews, not mock data.** A Chrome extension reads the reviews on the open page (Amazon, Flipkart, Zomato,
+  Google Maps, Goodreads, Tripadvisor, Booking.com, or any page where you select review text), sends them to the local
+  app and marks every aspect on the page itself in its sentiment colour.
+- **Matches the published results.** One Flan-T5-base model that is told the review's domain is within 2.5 F1 points of
+  the best published models on four of five domains (exact-match ACOS F1, mean of three seeds). Qwen2.5-1.5B with LoRA
+  exceeds the best published Restaurant score.
+- **A diagnosed and fixed failure.** Without the domain, 26 % of a single model's Laptop predictions used categories from
+  other domains. Naming the domain in the input cut this to 0.4 % and raised Laptop ACOS F1 from 22.7 to 34.8.
+- **Fine-tuning versus prompting.** Flan-T5 (49.7 ACOS F1, 35 ms per sentence) ties Qwen2.5-1.5B LoRA (50.2, not a
+  significant difference) and beats prompting Qwen2.5-7B with five retrieved examples (30.4) by about 20 points.
+- **Rare-class study.** Five ways of handling the rare Neutral class (2.2 % of opinions), with McNemar tests per seed
+  and temperature scaling so that the confidences shown are calibrated.
+- **Grounded generation.** The brief, the answers to questions and the reply drafts are written by an LLM from facts
+  computed in code. Every number, "X vs Y" pair and topic count in the text is checked against those facts before it is
+  shown, and reply drafts are also checked against business rules (no refunds, discounts or free replacements) and wait
+  for a person to approve them.
 
-## The web application
+## The application
 
-| Page | What it does |
+**Main view** (`http://127.0.0.1:8000`): one clean page per product.
+
+| Part | What it shows |
 |---|---|
-| **Analyze** | One review and its domain: aspects highlighted in their sentiment colour, the quadruple table, and a calibrated confidence from a second model that checks each sentiment |
-| **Batch insights** | Many reviews (paste, upload a .txt or .csv, or pick a demo file): a checked summary with praised topics, complaints and counts highlighted, "fix first" and "keep doing" topics with real quotes and a link to every review behind each number, sentiment by category, CSV export |
-| **Compare** | Two products side by side, compared by the share of each side's reviews that praise or complain about a topic so that sets of different sizes compare fairly: biggest differences, charts and a checked comparison summary |
-| **Model lab** | One sentence through several generators with greedy, beam-search or sampling decoding, showing the raw generated text and latency |
-| **Evaluation** | Test-set results, the comparison with the published results and the error analysis |
+| Reports | Every review set read so far, from the extension, pasted text or a demo product |
+| Report | Sentiment split, a three-sentence brief with every number checked, what people love and what needs fixing (with quotes), a question box that answers from the reviews and cites them, and every review with its aspects highlighted |
 
-<p>
-  <img src="docs/screenshots/step5.png" width="49%" alt="Summary and priorities">
-  <img src="docs/screenshots/step6.png" width="49%" alt="Comparing two products">
-</p>
+**Admin console** (`http://127.0.0.1:8000/admin`): the depth behind each report.
+
+| Section | What it does |
+|---|---|
+| Overview | The processing pipeline, the models and their status, recent reports |
+| Reports | Categories chart, every extracted quadruple with the checker's verdict, timing, CSV export, delete |
+| Analyze | One review: quadruple table, calibrated confidence and the raw model input and output |
+| Compare | Two products side by side, compared by the share of each side's reviews that praise or complain about a topic |
+| Replies | Reply or ticket drafts checked against business rules, approved or rejected by a person |
+| Model lab | One sentence through several generators with greedy, beam-search or sampling decoding, optionally constrained |
+| Evaluation | Test-set results, the comparison with the published results and the error analysis |
 
 ## How it works
 
 ```
-review + domain ─► Flan-T5-base ─► "[A] battery life [C] battery - operation performance [O] stellar [S] positive [SSEP] ..."
-                                        │
-                                        ▼
-                            parser ─► quadruples ─► DeBERTa-v3-small sentiment check (temperature-scaled)
-                                        │
-                                        ▼
-                    counts per topic ─► Qwen2.5-1.5B-Instruct writes a summary ─► every number is verified
+reviews (extension / pasted / demo)
+   │
+   ▼
+Flan-T5-base + domain ─► "[A] battery life [C] battery - operation performance [O] stellar [S] positive [SSEP] ..."
+   │
+   ▼
+parser ─► quadruples ─► DeBERTa-v3-small sentiment check (temperature-scaled) ─► topic counts and quotes
+   │
+   ▼
+Qwen2.5-1.5B-Instruct writes the brief / answer / draft from the counts ─► every number and claim is verified
 ```
 
 | Component | Model | Training |
 |---|---|---|
-| Quadruple generator (deployed) | Flan-T5-base, 248 M parameters | full fine-tuning, domain named in the input |
+| Quadruple generator (used by the app) | Flan-T5-base, 248 M parameters | full fine-tuning, domain named in the input |
 | Quadruple generator (compared) | Qwen2.5-1.5B-Instruct | LoRA, rank 16, 18.5 M trainable parameters |
 | Prompting baseline | Qwen2.5-7B-Instruct | none: instruction, category list and 5 TF-IDF-retrieved examples |
 | Sentiment check | DeBERTa-v3-small | class-weighted cross-entropy, temperature scaling |
-| Summary writer | Qwen2.5-1.5B-Instruct | none: phrases facts computed in code |
+| Brief, answers and drafts | Qwen2.5-1.5B-Instruct | none: phrases facts computed in code |
 
-## Quick start
+## Running it
 
-Requirements: Python 3.10 or newer, Node.js 18 or newer, and optionally an NVIDIA GPU.
+Requirements: Python 3.10 or newer, Node.js 18 or newer (only to build the web app once), Google Chrome, and
+optionally an NVIDIA GPU (a laptop GPU with 6 GB is enough; on CPU it is slower).
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate              # Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-python scripts/prepare_data.py      # builds data/processed/ from data/raw/
-python -m pytest                    # 34 tests
 ```
 
-### Run the web application
+Then double-click **`Start.bat`** (or run `python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000` from this
+folder after `npm install && npm run build` in `frontend/`). The browser opens on `http://127.0.0.1:8000` once the models
+have loaded.
 
-The trained weights are not stored in the repository (about 1.3 GB). Train them with the notebooks below, then place them under `outputs/runs/`:
+**Trained weights.** The app looks for the four trained models in `ABSA_MODELS_DIR`, then in `models/` inside this
+folder, then in `../2_Dataset_Models/Models/` next to it. Each model has its own folder: `Flan_T5_Domain`,
+`Flan_T5_Plain`, `Qwen_LoRA_Domain` and `DeBERTa_Sentiment`. The base models (Flan-T5-base, DeBERTa-v3-small,
+Qwen2.5-1.5B-Instruct) are downloaded from Hugging Face on the first start and cached.
 
-| Path | Needed for |
-|---|---|
-| `outputs/runs/t5/all_domains_tagged/model/seed42/model` | all pages |
-| `outputs/runs/classifiers/class_weights/seed42/model` (with `dev_probs.npy` one level up) | all pages |
-| `outputs/runs/t5/all_domains/model/seed42/model` | Model lab (optional) |
-| `outputs/runs/qwen/all_domains_tagged/model/seed42/model` | Model lab (optional) |
+**Chrome extension** (once):
+
+1. Open `chrome://extensions` and turn on **Developer mode**.
+2. Click **Load unpacked** and choose the `extension/` folder.
+3. Open a product page, scroll to its reviews, click the Aspect Insight icon and press **Read the reviews**.
+   **Show on page** marks the aspects on the page; **Open full report** opens the report in the app.
+
+Reports and drafts are saved in `data/captures.db` on this computer.
+
+## Tests
 
 ```bash
-cd frontend
-npm install
-npm run build
-cd ..
-python -m uvicorn backend.app:app --port 8000
+python -m pytest        # 39 tests: data, metrics, parsing, summaries, number checks, captures and drafts
 ```
-
-Open http://localhost:8000. The first start loads the models (about 30 seconds). For frontend development, run `npm run dev` in `frontend/` (port 5173, with API calls proxied to port 8000).
-
-API endpoints: `GET /api/health`, `/api/domains`, `/api/samples`, `/api/demo`, `/api/demo/{name}`, `/api/results` and `POST /api/analyze`, `/api/batch`, `/api/compare`, `/api/summary`.
 
 ## Training and evaluation
 
-The notebooks run the scripts on Google Colab. Copy the repository to Google Drive, open a notebook, set `PROJECT_DIR` in its first cell to the folder's Drive path, choose a GPU runtime and run all cells. Every script reads its settings from `configs/`, skips runs that already have results, and accepts `--limit` and `--epochs` for quick smoke tests.
+The notebooks run the scripts on Google Colab. Copy this folder to Google Drive, open a notebook, set `PROJECT_DIR` in its
+first cell, choose a GPU runtime and run all cells. Every script reads its settings from `configs/`, skips runs that
+already have results, and accepts `--limit` and `--epochs` for quick smoke tests. Runs are written to `outputs/runs/`.
 
 | Notebook | What it runs | Results in |
 |---|---|---|
@@ -104,28 +130,33 @@ The notebooks run the scripts on Google Colab. Copy the repository to Google Dri
 | `04_qwen_quad_generator` | Flan-T5 with the domain in the input, Qwen2.5-1.5B LoRA, prompting baselines | `outputs/results/t5/`, `qwen/`, `prompting/` |
 | `05_neutral_augmentation` | LLM-generated Neutral data, with and without verification | `outputs/results/classifiers/` |
 
-The evaluation summaries used by the dashboard are included in `outputs/results/`.
+`scripts/evaluate_constrained.py` measures constrained decoding (Flan-T5 may only write categories of the given domain)
+on the test set without any retraining; results are in `outputs/results/t5/constrained_decoding.md`.
 
-## Repository layout
+## Project layout
 
 | Path | Contents |
 |---|---|
-| `src/absa/` | Data handling, models, metrics, analysis and inference |
+| `backend/` | FastAPI service (`app.py`) and the results collector for the Evaluation page |
+| `frontend/src/main/` | Main view: reports list, new report, report page |
+| `frontend/src/admin/` | Admin console sections |
+| `frontend/src/components/` | Shared interface components |
+| `extension/` | Chrome extension (side panel and page reader) |
+| `src/absa/` | Data handling, models, metrics, inference, grounded drafts and the capture store |
 | `scripts/` | Data preparation, training, evaluation and data generation |
 | `configs/` | Experiment settings |
 | `notebooks/` | Colab runners |
-| `backend/` | FastAPI service |
-| `frontend/` | React, Vite, Tailwind CSS and Recharts single-page app |
 | `data/raw/MEMD-ABSA/` | Original dataset |
 | `data/processed/` | Processed splits, category inventory and LLM-generated Neutral data |
-| `data/demo/` | Simulated review files for trying the dashboard |
+| `data/demo/` | Simulated review files for trying the app without a live page |
 | `outputs/results/` | Evaluation results |
-| `docs/screenshots/` | Screenshots of the web application |
-| `tests/` | Unit tests |
+| `tests/` | Unit and API tests |
 
 ## Demo data
 
-`data/demo/` contains 307 **simulated** reviews in 19 CSV files for trying the dashboard, three or four well-known products per domain: laptops (MacBook Air M3, Dell XPS 13, ASUS ROG Zephyrus G14, ThinkPad X1 Carbon), restaurants (Domino's, Pizza Hut, Starbucks, McDonald's), hotels (Taj Mahal Palace, Marina Bay Sands, ibis), clothing (Levi's 511, Nike Air Force 1, Uniqlo AIRism, Crocs) and books (Atomic Habits, The Alchemist, Harry Potter, Sapiens). They describe only traits widely reported in public reviews. None of them is a real customer review, and every row is marked as simulated.
+`data/demo/` contains 307 **simulated** reviews in 19 CSV files, three or four well-known products per domain. They
+describe only traits widely reported in public reviews. None of them is a real customer review; every row is marked as
+simulated and the app labels these reports "Simulated reviews". Live pages are read with the extension.
 
 ## Dataset and references
 

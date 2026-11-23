@@ -1,12 +1,13 @@
-export const SENTIMENT_COLORS = { positive: "#0F8C74", negative: "#D0533C", neutral: "#D9A136" };
+export const SENTIMENT_COLORS = { positive: "#3F8660", negative: "#B9503F", neutral: "#AD6F2B" };
+export const SENTIMENT_SOFT = { positive: "#E2ECDC", negative: "#F6E0D6", neutral: "#F5E6CF" };
 export const SENTIMENTS = ["positive", "negative", "neutral"];
 
 export const MODEL_COLORS = {
   paper: "#A39A92",
-  t5_domain: "#7B58A6",
-  qwen_domain: "#E07155",
-  t5_plain: "#00897B",
-  t5_per_domain: "#BF8B1F",
+  t5_domain: "#4757CF",
+  qwen_domain: "#C0683F",
+  t5_plain: "#3F8660",
+  t5_per_domain: "#B48A2C",
 };
 
 export const MODEL_NAMES = {
@@ -15,6 +16,11 @@ export const MODEL_NAMES = {
   qwen_domain: "Qwen2.5-1.5B LoRA + domain",
   t5_plain: "Flan-T5, no domain",
   t5_per_domain: "Flan-T5, one model per domain",
+};
+
+export const SOURCES = {
+  amazon: "Amazon", flipkart: "Flipkart", zomato: "Zomato", google_maps: "Google Maps", tripadvisor: "Tripadvisor",
+  booking: "Booking.com", goodreads: "Goodreads", web: "Web page", pasted: "Pasted", demo: "Demo · simulated",
 };
 
 async function request(path, options = {}) {
@@ -38,14 +44,46 @@ export const api = {
   health: () => request("/api/health"),
   domains: () => request("/api/domains"),
   samples: (domain, n = 50, seed = 0) => request(`/api/samples?domain=${domain}&n=${n}&seed=${seed}`),
-  analyze: (text, domain) => request("/api/analyze", { method: "POST", body: { text, domain } }),
+  analyze: (text, domain, constrained = false) =>
+    request("/api/analyze", { method: "POST", body: { text, domain, constrained } }),
   batch: (reviews, domain) => request("/api/batch", { method: "POST", body: { reviews, domain } }),
   compare: (body) => request("/api/compare", { method: "POST", body }),
   results: () => request("/api/results"),
   demoList: () => request("/api/demo"),
   demoFile: (name) => request(`/api/demo/${name}`),
   summary: (domain, batches) => request("/api/summary", { method: "POST", body: { domain, batches } }),
+  captures: () => request("/api/captures"),
+  capture: (id) => request(`/api/captures/${id}`),
+  createCapture: (body) => request("/api/captures", { method: "POST", body }),
+  deleteCapture: (id) => request(`/api/captures/${id}`, { method: "DELETE" }),
+  brief: (id, refresh = false) => request(`/api/captures/${id}/brief${refresh ? "?refresh=true" : ""}`, { method: "POST" }),
+  ask: (id, question) => request(`/api/captures/${id}/ask`, { method: "POST", body: { question } }),
+  drafts: (captureId) => request(`/api/drafts${captureId ? `?capture_id=${captureId}` : ""}`),
+  createDraft: (body) => request("/api/drafts", { method: "POST", body }),
+  decideDraft: (id, body) => request(`/api/drafts/${id}/decide`, { method: "POST", body }),
 };
+
+export function timeAgo(iso) {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (!isFinite(s)) return "";
+  if (s < 60) return "just now";
+  const units = [[60, "minute"], [3600, "hour"], [86400, "day"], [604800, "week"]];
+  let out = `${Math.floor(s / 60)} minutes ago`;
+  for (const [sec, name] of units) {
+    const n = Math.floor(s / sec);
+    if (n >= 1) out = `${n} ${name}${n === 1 ? "" : "s"} ago`;
+  }
+  return out;
+}
+
+export function hostOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; }
+}
+
+export function hashParams() {
+  const q = window.location.hash.split("?")[1] || "";
+  return new URLSearchParams(q);
+}
 
 export function pct(x, digits = 0) {
   return `${(100 * (x || 0)).toFixed(digits)}%`;
@@ -92,4 +130,12 @@ export function parseReviewFile(text, name) {
   const col = Math.max(0, header.findIndex((h) => ["review", "text", "comment", "sentence", "body"].includes(h)));
   const hasHeader = header.some((h) => ["review", "text", "comment", "sentence", "body"].includes(h));
   return lines.slice(hasHeader ? 1 : 0).map((l) => (split(l)[col] || "").trim()).filter(Boolean);
+}
+
+/** Product name without the specification list shops append: "Apple MacBook Air: M5 chip, 16GB ..." -> "Apple MacBook Air". */
+export function shortTitle(title, limit = 50) {
+  const t = (title || "").trim();
+  let head = t.split(/\s*[:|([,–—]\s*|\s+-\s+/)[0].trim() || t;
+  if (head.length > limit) head = head.slice(0, limit).replace(/\s+\S*$/, "");
+  return head.replace(/(\s+(with|and|for|of|the|in|by|to))+$/i, "");
 }

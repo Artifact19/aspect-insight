@@ -1,0 +1,217 @@
+{
+  "device": "cuda",
+  "runs": [
+    {
+      "key": "t5_plain",
+      "label": "Flan-T5-base, no domain",
+      "unconstrained": {
+        "constrained": false,
+        "overall_acos_f1": 47.04,
+        "overall_aos_f1": 63.05,
+        "overall_cs_f1": 63.43,
+        "wrong_domain_share": 8.76,
+        "malformed": 8,
+        "ms_per_sentence": 36.38,
+        "by_domain": {
+          "Books": {
+            "acos_f1": 40.07,
+            "aos_f1": 52.74,
+            "cs_f1": 62.63,
+            "wrong_domain_share": 3.91,
+            "malformed": 2,
+            "sentences": 583
+          },
+          "Clothing": {
+            "acos_f1": 40.72,
+            "aos_f1": 68.64,
+            "cs_f1": 53.97,
+            "wrong_domain_share": 6.97,
+            "malformed": 0,
+            "sentences": 466
+          },
+          "Hotel": {
+            "acos_f1": 67.88,
+            "aos_f1": 77.06,
+            "cs_f1": 81.18,
+            "wrong_domain_share": 3.22,
+            "malformed": 1,
+            "sentences": 696
+          },
+          "Laptop": {
+            "acos_f1": 22.12,
+            "aos_f1": 53.99,
+            "cs_f1": 36.2,
+            "wrong_domain_share": 28.16,
+            "malformed": 2,
+            "sentences": 818
+          },
+          "Restaurant": {
+            "acos_f1": 54.55,
+            "aos_f1": 62.21,
+            "cs_f1": 76.22,
+            "wrong_domain_share": 3.03,
+            "malformed": 3,
+            "sentences": 1020
+          }
+        }
+      },
+      "constrained": {
+        "constrained": true,
+        "overall_acos_f1": 50.1,
+        "overall_aos_f1": 63.31,
+        "overall_cs_f1": 68.28,
+        "wrong_domain_share": 0.0,
+        "malformed": 8,
+        "ms_per_sentence": 339.58,
+        "by_domain": {
+          "Books": {
+            "acos_f1": 40.96,
+            "aos_f1": 52.86,
+            "cs_f1": 64.05,
+            "wrong_domain_share": 0.0,
+            "malformed": 2,
+            "sentences": 583
+          },
+          "Clothing": {
+            "acos_f1": 42.4,
+            "aos_f1": 68.64,
+            "cs_f1": 56.66,
+            "wrong_domain_share": 0.0,
+            "malformed": 0,
+            "sentences": 466
+          },
+          "Hotel": {
+            "acos_f1": 69.54,
+            "aos_f1": 77.15,
+            "cs_f1": 83.85,
+            "wrong_domain_share": 0.0,
+            "malformed": 1,
+            "sentences": 696
+          },
+          "Laptop": {
+            "acos_f1": 31.6,
+            "aos_f1": 55.04,
+            "cs_f1": 49.7,
+            "wrong_domain_share": 0.0,
+            "malformed": 2,
+            "sentences": 818
+          },
+          "Restaurant": {
+            "acos_f1": 56.12,
+            "aos_f1": 62.27,
+            "cs_f1": 78.89,
+            "wrong_domain_share": 0.0,
+            "malformed": 3,
+            "sentences": 1020
+          }
+        }
+      }
+    },
+    {
+      "key": "t5_domain",
+      "label": "Flan-T5-base + domain",
+      "unconstrained": {
+        "constrained": false,
+        "overall_acos_f1": 49.63,
+        "overall_aos_f1": 62.76,
+        "overall_cs_f1": 67.5,
+        "wrong_domain_share": 0.19,
+        "malformed": 7,
+        "ms_per_sentence": 33.17,
+        "by_domain": {
+          "Books": {
+            "acos_f1": 38.28,
+            "aos_f1": 48.0,
+            "cs_f1": 61.54,
+            "wrong_domain_share": 0.24,
+            "malformed": 1,
+            "sentences": 583
+          },
+          "Clothing": {
+            "acos_f1": 41.77,
+            "aos_f1": 70.9,
+            "cs_f1": 53.99,
+            "wrong_domain_share": 0.0,
+            "malformed": 0,
+            "sentences": 466
+          },
+          "Hotel": {
+            "acos_f1": 68.45,
+            "aos_f1": 76.74,
+            "cs_f1": 82.41,
+            "wrong_domain_share": 0.17,
+            "malformed": 2,
+            "sentences": 696
+          },
+          "Laptop": {
+            "acos_f1": 34.32,
+            "aos_f1": 56.89,
+            "cs_f1": 52.51,
+            "wrong_domain_share": 0.48,
+            "malformed": 1,
+            "sentences": 818
+          },
+          "Restaurant": {
+            "acos_f1": 55.13,
+            "aos_f1": 61.11,
+            "cs_f1": 77.52,
+            "wrong_domain_share": 0.07,
+            "malformed": 3,
+            "sentences": 1020
+          }
+        }
+      },
+      "constrained": {
+        "constrained": true,
+        "overall_acos_f1": 49.65,
+        "overall_aos_f1": 62.76,
+        "overall_cs_f1": 67.55,
+        "wrong_domain_share": 0.0,
+        "malformed": 7,
+        "ms_per_sentence": 316.83,
+        "by_domain": {
+          "Books": {
+            "acos_f1": 38.28,
+            "aos_f1": 48.0,
+            "cs_f1": 61.54,
+            "wrong_domain_share": 0.0,
+            "malformed": 1,
+            "sentences": 583
+          },
+          "Clothing": {
+            "acos_f1": 41.77,
+            "aos_f1": 70.9,
+            "cs_f1": 53.99,
+            "wrong_domain_share": 0.0,
+            "malformed": 0,
+            "sentences": 466
+          },
+          "Hotel": {
+            "acos_f1": 68.53,
+            "aos_f1": 76.74,
+            "cs_f1": 82.51,
+            "wrong_domain_share": 0.0,
+            "malformed": 2,
+            "sentences": 696
+          },
+          "Laptop": {
+            "acos_f1": 34.32,
+            "aos_f1": 56.89,
+            "cs_f1": 52.61,
+            "wrong_domain_share": 0.0,
+            "malformed": 1,
+            "sentences": 818
+          },
+          "Restaurant": {
+            "acos_f1": 55.13,
+            "aos_f1": 61.11,
+            "cs_f1": 77.55,
+            "wrong_domain_share": 0.0,
+            "malformed": 3,
+            "sentences": 1020
+          }
+        }
+      }
+    }
+  ]
+}

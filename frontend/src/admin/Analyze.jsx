@@ -28,13 +28,6 @@ export default function Analyze({ domains, domain, setDomain }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-extrabold tracking-tight">Analyze a review</h2>
-        <p className="mt-1 max-w-3xl text-muted">
-          Paste a review and choose its domain. The model writes every opinion as an (aspect, category, opinion, sentiment)
-          quadruple, and a second model double-checks each sentiment.
-        </p>
-      </div>
 
       <Card>
         <div className="space-y-4">
@@ -51,7 +44,7 @@ export default function Analyze({ domains, domain, setDomain }) {
             <button className="btn-primary" onClick={run} disabled={busy || !text.trim()}>Extract opinions</button>
             <span className="ml-2 text-sm text-muted">Try:</span>
             {examples.map((ex, i) => (
-              <button key={i} className="chip border-line bg-white text-xs font-semibold text-muted hover:border-brand-500 hover:text-ink"
+              <button key={i} className="chip border-line bg-surface text-xs font-semibold text-muted hover:border-brand-500 hover:text-ink"
                 onClick={() => { setText(ex); setResult(null); }}>Example {i + 1}</button>
             ))}
           </div>

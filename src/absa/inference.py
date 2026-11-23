@@ -12,7 +12,8 @@ import numpy as np
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoModelForSequenceClassification, AutoTokenizer
 
-from .constants import DOMAINS, ID2LABEL, NULL, OUTPUT_DIR, PROCESSED_DIR, SENTIMENT_WORDS
+from .constants import DOMAINS, ID2LABEL, MODELS_DIR, NULL, PROCESSED_DIR, SENTIMENT_WORDS
+from .constrained import DomainCategoryConstraint
 from .data import CategoryVocab, category_to_text, load_pairs, load_sentences, mark_aspect, parse, quads_of, target_text
 from .metrics import apply_temperature, fit_temperature
 from .utils import free_memory, get_device, load_json, sync
@@ -41,16 +42,16 @@ class GeneratorSpec:
     note: str = ""
 
 
-def default_specs(runs: Path = OUTPUT_DIR / "runs") -> list[GeneratorSpec]:
+def default_specs(models: Path = MODELS_DIR) -> list[GeneratorSpec]:
     return [
         GeneratorSpec("t5_domain", "Flan-T5-base + domain", "seq2seq",
-                      runs / "t5/all_domains_tagged/model/seed42/model", "google/flan-t5-base", True,
+                      models / "Flan_T5_Domain", "google/flan-t5-base", True,
                       "Deployed model: full fine-tuning, domain named in the input"),
         GeneratorSpec("t5_plain", "Flan-T5-base, no domain", "seq2seq",
-                      runs / "t5/all_domains/model/seed42/model", "google/flan-t5-base", False,
+                      models / "Flan_T5_Plain", "google/flan-t5-base", False,
                       "Same model trained without the domain in the input"),
         GeneratorSpec("qwen_domain", "Qwen2.5-1.5B LoRA + domain", "causal",
-                      runs / "qwen/all_domains_tagged/model/seed42/model", "Qwen/Qwen2.5-1.5B-Instruct", True,
+                      models / "Qwen_LoRA_Domain", "Qwen/Qwen2.5-1.5B-Instruct", True,
                       "Decoder-only LLM with a LoRA adapter"),
     ]
 
@@ -107,7 +108,8 @@ class Generator:
 
     @torch.no_grad()
     def generate(self, sentences: Sequence[str], domain: str, decoding: str = "greedy", temperature: float = 0.7,
-                 top_p: float = 0.9, batch_size: int | None = None) -> tuple[list[str], float]:
+                 top_p: float = 0.9, batch_size: int | None = None,
+                 prefix_allowed_tokens_fn=None) -> tuple[list[str], float]:
         kwargs = dict(DECODING.get(decoding, DECODING["greedy"]))
         if kwargs.get("do_sample"):
             kwargs.update(temperature=max(0.05, float(temperature)), top_p=float(top_p))
@@ -115,6 +117,8 @@ class Generator:
         batch_size = batch_size or (64 if self.spec.kind == "seq2seq" else 16)
         if self.spec.kind == "seq2seq":
             from .models.generator import generate
+            if prefix_allowed_tokens_fn is not None:
+                kwargs["prefix_allowed_tokens_fn"] = prefix_allowed_tokens_fn
             return generate(self.model, self.tokenizer, prompts, max_new_tokens=160, batch_size=batch_size, **kwargs)
         from .models.llm import clean_output, generate
         with torch.autocast(device_type=self.device.type, dtype=self.dtype or torch.float32,
@@ -132,8 +136,11 @@ class Classifier:
         self.tokenizer = AutoTokenizer.from_pretrained(base, use_fast=False)
         self.model = AutoModelForSequenceClassification.from_pretrained(path).float().to(device).eval()
         self.temperature = 1.0
+        saved = path / "temperature.json"
         dev_probs = path.parent / "dev_probs.npy"
-        if dev_probs.exists():
+        if saved.exists():
+            self.temperature = float(load_json(saved)["temperature"])
+        elif dev_probs.exists():
             labels = np.array([r["label"] for r in load_pairs(list(DOMAINS), "Dev")])
             probs = np.load(dev_probs)
             if len(probs) == len(labels):
@@ -156,20 +163,31 @@ class Classifier:
 
 @dataclass
 class Analyzer:
-    runs: Path = OUTPUT_DIR / "runs"
+    models: Path = MODELS_DIR
     device: torch.device = field(default_factory=get_device)
 
     def __post_init__(self):
         self.vocab = CategoryVocab.load(PROCESSED_DIR / "categories.json")
-        self.specs = {s.key: s for s in default_specs(self.runs)}
+        self.specs = {s.key: s for s in default_specs(self.models)}
         self.small_gpu = self.device.type == "cuda" and torch.cuda.get_device_properties(0).total_memory < 10e9
         self.generators: dict[str, Generator] = {}
+        self._constraints: dict[tuple[str, str], DomainCategoryConstraint] = {}
         train = {d: load_sentences([d], "Train") for d in DOMAINS}
         self.domain_categories = {d: {category_to_text(q.category) for s in rows for q in quads_of(s)}
                                   for d, rows in train.items()}
         self.lowercase = {d: np.mean([s["text"] == s["text"].lower() for s in rows]) > 0.5 for d, rows in train.items()}
-        self.classifier = Classifier(self.runs / "classifiers/class_weights/seed42/model", torch.device("cpu"))
+        self.classifier = Classifier(self.models / "DeBERTa_Sentiment", torch.device("cpu"))
         self.get(PRIMARY)
+
+    def constraint(self, model_key: str, domain: str) -> DomainCategoryConstraint | None:
+        gen = self.get(model_key)
+        if gen.spec.kind != "seq2seq":
+            return None
+        key = (model_key, domain)
+        if key not in self._constraints:
+            vocab_size = getattr(gen.model.config, "vocab_size", len(gen.tokenizer))
+            self._constraints[key] = DomainCategoryConstraint(gen.tokenizer, self.domain_categories[domain], vocab_size)
+        return self._constraints[key]
 
     # ------------------------------------------------------------------ models
     def available(self) -> list[dict]:
@@ -222,7 +240,8 @@ class Analyzer:
         return (time.perf_counter() - t0) * 1000
 
     def analyze(self, texts: Sequence[str], domain: str, model: str = "t5_domain", decoding: str = "greedy",
-                temperature: float = 0.7, top_p: float = 0.9, check_domain: bool = True) -> dict:
+                temperature: float = 0.7, top_p: float = 0.9, check_domain: bool = True,
+                constrained: bool = False) -> dict:
         if domain not in DOMAINS:
             raise ValueError(f"unknown domain {domain}")
         t_start = time.perf_counter()
@@ -230,7 +249,14 @@ class Analyzer:
         sentences = [s for _, s in units]
         model_texts = [to_model_text(s, self.lowercase[domain]) for s in sentences]
         gen = self.get(model)
-        raw, gen_ms = gen.generate(model_texts, domain, decoding, temperature, top_p) if sentences else ([], 0.0)
+        constraint = self.constraint(model, domain) if (constrained and gen.spec.kind == "seq2seq") else None
+        raw, gen_ms = (
+            gen.generate(
+                model_texts, domain, decoding, temperature, top_p,
+                prefix_allowed_tokens_fn=constraint.prefix_allowed_tokens_fn if constraint else None,
+            )
+            if sentences else ([], 0.0)
+        )
         out, all_items = [], []
         for (review, sentence), model_text, text in zip(units, model_texts, raw):
             kept, discarded, malformed = self._quads(sentence, model_text, text, domain, check_domain)
@@ -243,6 +269,7 @@ class Analyzer:
                 d.pop("target", None)
                 d.pop("marked_sentence", None)
         return {"domain": domain, "model": gen.spec.label, "model_key": model, "decoding": decoding,
+                "constrained": bool(constraint),
                 "sentences": out, "summary": summarize(out),
                 "timing": {"total_ms": round((time.perf_counter() - t_start) * 1000, 1),
                            "generation_ms_per_sentence": round(gen_ms, 1),
@@ -516,8 +543,24 @@ def check_direction(text: str, facts: Sequence[str]) -> list[str]:
     return bad
 
 
+def batch_labels(facts: Sequence[str]) -> list[str]:
+    """Product names the facts are about ("MacBook Air 13: 14 laptop reviews ..." -> "MacBook Air 13")."""
+    return [m.group(1).strip() for m in (re.match(r"([^:]+): \d+ (?:[a-z]+ )?reviews", f) for f in facts) if m]
+
+
 def check_numbers(text: str, facts: Sequence[str]) -> list[str]:
-    """Numbers in the generated text that occur nowhere in the facts, and "X vs Y" pairs that the facts do not state."""
+    """Numbers in the generated text that occur nowhere in the facts, and "X vs Y" pairs that the facts do not state.
+    Numbers inside a product name ("MacBook Air 13") are part of the name, not claims, so they are not checked."""
+    for label in sorted(batch_labels(facts), key=len, reverse=True):
+        words = label.split()
+        if not re.search(r"\d", label):
+            continue
+        # The writer often shortens the name ("Apple MacBook Air 13 Laptop's"), so mask its longest leading part.
+        for n in range(len(words), 1, -1):
+            masked = re.sub(r"\s+".join(re.escape(w) for w in words[:n]), " ", text, flags=re.IGNORECASE)
+            if masked != text:
+                text = masked
+                break
     joined = " ".join(facts)
     allowed = set(NUMBER.findall(joined))
     pairs = {(x, y) for x, y in PAIR.findall(joined)}

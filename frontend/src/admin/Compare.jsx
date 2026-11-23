@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, LabelList, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { api, parseReviewFile, pct, titleCase } from "../lib.js";
+import { api, hashParams, parseReviewFile, pct, titleCase } from "../lib.js";
 import { Card, DomainPicker, ErrorBox, Spinner, Tabs } from "../components/ui.jsx";
 import { DemoPicker, Highlights, SummaryCard } from "../components/insights.jsx";
 
-const COLORS = { a: "#7B58A6", b: "#BF8B1F" };
-const TEXT_COLORS = { a: "#664590", b: "#8A6314" };
+const COLORS = { a: "#4757CF", b: "#C0683F" };
+const TEXT_COLORS = { a: "#2F3A96", b: "#9A4F2C" };
 const SIMILAR = 10;
 const PAIRS = [
   { title: "MacBook Air vs Dell XPS", domain: "Laptop", a: "laptop_macbook_air_m3", b: "laptop_dell_xps_13", la: "MacBook Air M3", lb: "Dell XPS 13" },
@@ -15,7 +15,7 @@ const PAIRS = [
   { title: "Atomic Habits vs The Alchemist", domain: "Books", a: "books_atomic_habits", b: "books_the_alchemist", la: "Atomic Habits", lb: "The Alchemist" },
 ];
 
-function Side({ id, side, setSide, domain, disabled }) {
+function Side({ id, side, setSide, domain, disabled, captures, onPickCapture }) {
   const count = side.text.split(/\r?\n/).filter((l) => l.trim()).length;
   const onFile = async (e) => {
     const file = e.target.files?.[0];
@@ -34,6 +34,13 @@ function Side({ id, side, setSide, domain, disabled }) {
       <div className="flex flex-wrap items-center gap-2">
         <label className="btn-ghost cursor-pointer py-1.5">Upload<input type="file" accept=".txt,.csv" className="hidden" onChange={onFile} /></label>
         <DemoPicker filterDomain={domain} disabled={disabled} placeholder="Demo product…" onLoad={(d) => setSide({ label: d.label, text: d.reviews.join("\n") })} />
+        {captures?.length > 0 && (
+          <select className="input w-auto py-1.5 text-sm font-semibold" disabled={disabled} value=""
+            onChange={(e) => { if (e.target.value) onPickCapture(e.target.value); }}>
+            <option value="">Saved report…</option>
+            {captures.map((c) => <option key={c.id} value={c.id}>{c.title.slice(0, 60)} ({c.review_count})</option>)}
+          </select>
+        )}
         <span className="ml-auto text-xs text-muted">{count} reviews</span>
       </div>
     </div>
@@ -43,10 +50,45 @@ function Side({ id, side, setSide, domain, disabled }) {
 export default function Compare({ domains, domain, setDomain }) {
   const [a, setA] = useState({ label: "A", text: "" });
   const [b, setB] = useState({ label: "B", text: "" });
+  const [captures, setCaptures] = useState([]);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [tab, setTab] = useState("overview");
+
+  const loadCaptureIntoSide = async (id, sideSetter, syncDomain = false) => {
+    const cap = await api.capture(id);
+    if (syncDomain && cap.domain) setDomain(cap.domain);
+    sideSetter({
+      label: cap.title,
+      text: (cap.reviews || []).map((r) => r.text).join("\n"),
+    });
+    return cap;
+  };
+
+  useEffect(() => {
+    api.captures().then(setCaptures).catch(() => setCaptures([]));
+    const params = hashParams();
+    const aId = params.get("a");
+    const bId = params.get("b");
+    if (aId && bId) {
+      setBusy("Loading the two reports…");
+      Promise.all([api.capture(aId), api.capture(bId)])
+        .then(([ca, cb]) => {
+          setDomain(ca.domain || cb.domain || domain);
+          setA({ label: ca.title, text: (ca.reviews || []).map((r) => r.text).join("\n") });
+          setB({ label: cb.title, text: (cb.reviews || []).map((r) => r.text).join("\n") });
+          setResult({
+            a: { label: ca.title, summary: ca.summary, reviews: ca.review_count },
+            b: { label: cb.title, summary: cb.summary, reviews: cb.review_count },
+          });
+        })
+        .catch((e) => setError(e.message))
+        .finally(() => setBusy(""));
+    } else if (aId) {
+      loadCaptureIntoSide(aId, setA, true).catch(() => {});
+    }
+  }, []);
 
   const lines = (x) => x.text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 
@@ -98,16 +140,16 @@ export default function Compare({ domains, domain, setDomain }) {
     <Card title={title} subtitle={subtitle}>
       <ResponsiveContainer width="100%" height={Math.max(200, data.length * 52 + 50)}>
         <BarChart data={data} layout="vertical" margin={{ left: 8, right: 34 }} barGap={2} barCategoryGap={10}>
-          <CartesianGrid horizontal={false} stroke="#EFE7DB" />
-          <XAxis type="number" allowDecimals={false} unit="%" tick={{ fontSize: 12, fill: "#7A716A" }} axisLine={false} tickLine={false} />
-          <YAxis type="category" dataKey="name" width={190} tick={{ fontSize: 12, fill: "#2E2A27" }} axisLine={false} tickLine={false} />
-          <Tooltip cursor={{ fill: "#F3EBDF" }} formatter={(v, k) => [`${v}% of reviews`, k === ka ? result.a.label : result.b.label]} />
+          <CartesianGrid horizontal={false} stroke="#E6DCCD" />
+          <XAxis type="number" allowDecimals={false} unit="%" tick={{ fontSize: 12, fill: "#8C8176" }} axisLine={false} tickLine={false} />
+          <YAxis type="category" dataKey="name" width={190} tick={{ fontSize: 12, fill: "#2F2923" }} axisLine={false} tickLine={false} />
+          <Tooltip cursor={{ fill: "#EEE6DA" }} formatter={(v, k) => [`${v}% of reviews`, k === ka ? result.a.label : result.b.label]} />
           <Legend formatter={(v) => <span className="text-ink">{v === ka ? result.a.label : result.b.label}</span>} />
           <Bar dataKey={ka} fill={COLORS.a} radius={[0, 4, 4, 0]} maxBarSize={16}>
-            <LabelList dataKey={ka} position="right" formatter={(v) => `${v}%`} style={{ fontSize: 11, fill: "#2E2A27" }} />
+            <LabelList dataKey={ka} position="right" formatter={(v) => `${v}%`} style={{ fontSize: 11, fill: "#2F2923" }} />
           </Bar>
           <Bar dataKey={kb} fill={COLORS.b} radius={[0, 4, 4, 0]} maxBarSize={16}>
-            <LabelList dataKey={kb} position="right" formatter={(v) => `${v}%`} style={{ fontSize: 11, fill: "#2E2A27" }} />
+            <LabelList dataKey={kb} position="right" formatter={(v) => `${v}%`} style={{ fontSize: 11, fill: "#2F2923" }} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
@@ -123,23 +165,17 @@ export default function Compare({ domains, domain, setDomain }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-extrabold tracking-tight">Compare</h2>
-        <p className="mt-1 max-w-3xl text-muted">
-          Put two products side by side and see where customers are happier or more critical, topic by topic.
-        </p>
-      </div>
 
       <Card>
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="label mr-1">Try a pair</span>
-            {PAIRS.map((p) => <button key={p.title} className="chip border-line bg-white text-sm hover:border-brand-500" disabled={!!busy} onClick={() => loadPair(p)}>{p.title}</button>)}
+            {PAIRS.map((p) => <button key={p.title} className="chip border-line bg-surface text-sm hover:border-brand-500" disabled={!!busy} onClick={() => loadPair(p)}>{p.title}</button>)}
           </div>
           <div><div className="label mb-2">Domain</div><DomainPicker domains={domains} value={domain} onChange={(d) => { setDomain(d); setResult(null); }} /></div>
           <div className="grid gap-6 lg:grid-cols-2">
-            <Side id="a" side={a} setSide={setA} domain={domain} disabled={!!busy} />
-            <Side id="b" side={b} setSide={setB} domain={domain} disabled={!!busy} />
+            <Side id="a" side={a} setSide={setA} domain={domain} disabled={!!busy} captures={captures} onPickCapture={(id) => loadCaptureIntoSide(id, setA, true)} />
+            <Side id="b" side={b} setSide={setB} domain={domain} disabled={!!busy} captures={captures} onPickCapture={(id) => loadCaptureIntoSide(id, setB, false)} />
           </div>
           <div className="flex items-center gap-4">
             <button className="btn-primary" onClick={run} disabled={!!busy || !lines(a).length || !lines(b).length}>Compare</button>

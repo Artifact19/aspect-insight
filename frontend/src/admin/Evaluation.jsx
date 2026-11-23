@@ -3,12 +3,12 @@ import { Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, ResponsiveContai
 import { MODEL_COLORS, MODEL_NAMES, api } from "../lib.js";
 import { Card, ErrorBox, Spinner, Stat } from "../components/ui.jsx";
 
-const AXIS = { tick: { fontSize: 12, fill: "#7A716A" }, axisLine: false, tickLine: false };
-const GRID = <CartesianGrid vertical={false} stroke="#EFE7DB" />;
+const AXIS = { tick: { fontSize: 12, fill: "#8C8176" }, axisLine: false, tickLine: false };
+const GRID = <CartesianGrid vertical={false} stroke="#E6DCCD" />;
 const fmt = (v) => (v === null || v === undefined ? "–" : Number(v).toFixed(1));
 
 function Takeaway({ children }) {
-  return <p className="mt-3 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{children}</p>;
+  return <p className="mt-4 rounded-2xl bg-brand-50/80 px-4 py-2.5 text-sm text-brand-700">{children}</p>;
 }
 
 export default function Evaluation() {
@@ -44,13 +44,6 @@ export default function Evaluation() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-extrabold tracking-tight">Evaluation</h2>
-        <p className="mt-1 max-w-3xl text-muted">
-          Results on the official MEMD-ABSA test set (3,583 sentences, five domains). ACOS F1 is exact-match micro-F1 on
-          complete quadruples; values are means over three seeds (42, 153, 650).
-        </p>
-      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Flan-T5 + domain, ACOS F1" value={fmt(data.overall["Flan-T5 + domain"]?.ACOS)} hint={`${data.speed_ms["Flan-T5 + domain"]} ms per sentence (A100)`} color={MODEL_COLORS.t5_domain} />
@@ -65,7 +58,7 @@ export default function Evaluation() {
             {GRID}
             <XAxis dataKey="domain" {...AXIS} />
             <YAxis {...AXIS} domain={[0, 80]} />
-            <Tooltip formatter={(v, n) => [fmt(v), MODEL_NAMES[n] || n]} cursor={{ fill: "#F3EBDF" }} />
+            <Tooltip formatter={(v, n) => [fmt(v), MODEL_NAMES[n] || n]} cursor={{ fill: "#EEE6DA" }} />
             <Legend formatter={(v) => <span className="text-ink">{MODEL_NAMES[v]}</span>} wrapperStyle={{ fontSize: 13 }} />
             {series.map((k) => <Bar key={k} dataKey={k} fill={MODEL_COLORS[k]} radius={[4, 4, 0, 0]} maxBarSize={22} />)}
           </BarChart>
@@ -80,7 +73,7 @@ export default function Evaluation() {
               {GRID}
               <XAxis dataKey="task" {...AXIS} />
               <YAxis {...AXIS} domain={[0, 100]} />
-              <Tooltip formatter={(v, n) => [fmt(v), MODEL_NAMES[n]]} cursor={{ fill: "#F3EBDF" }} />
+              <Tooltip formatter={(v, n) => [fmt(v), MODEL_NAMES[n]]} cursor={{ fill: "#EEE6DA" }} />
               <Legend formatter={(v) => <span className="text-ink">{MODEL_NAMES[v]}</span>} wrapperStyle={{ fontSize: 12 }} />
               {["t5_plain", "t5_domain", "qwen_domain"].map((k) => <Bar key={k} dataKey={k} fill={MODEL_COLORS[k]} radius={[4, 4, 0, 0]} maxBarSize={18} />)}
             </BarChart>
@@ -94,7 +87,7 @@ export default function Evaluation() {
               {GRID}
               <XAxis dataKey="domain" {...AXIS} />
               <YAxis {...AXIS} unit="%" />
-              <Tooltip formatter={(v, n) => [`${fmt(v)}%`, MODEL_NAMES[n]]} cursor={{ fill: "#F3EBDF" }} />
+              <Tooltip formatter={(v, n) => [`${fmt(v)}%`, MODEL_NAMES[n]]} cursor={{ fill: "#EEE6DA" }} />
               <Legend formatter={(v) => <span className="text-ink">{MODEL_NAMES[v]}</span>} wrapperStyle={{ fontSize: 12 }} />
               {["t5_plain", "t5_domain"].map((k) => <Bar key={k} dataKey={k} fill={MODEL_COLORS[k]} radius={[4, 4, 0, 0]} maxBarSize={26} />)}
             </BarChart>
@@ -107,13 +100,13 @@ export default function Evaluation() {
         <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
           <ResponsiveContainer width="100%" height={approaches.length * 46 + 30}>
             <BarChart data={approaches} layout="vertical" margin={{ right: 40 }}>
-              <CartesianGrid horizontal={false} stroke="#EFE7DB" />
+              <CartesianGrid horizontal={false} stroke="#E6DCCD" />
               <XAxis type="number" {...AXIS} domain={[0, 60]} />
-              <YAxis type="category" dataKey="name" width={250} tick={{ fontSize: 12, fill: "#2E2A27" }} axisLine={false} tickLine={false} />
-              <Tooltip formatter={(v) => fmt(v)} cursor={{ fill: "#F3EBDF" }} />
+              <YAxis type="category" dataKey="name" width={250} tick={{ fontSize: 12, fill: "#2F2923" }} axisLine={false} tickLine={false} />
+              <Tooltip formatter={(v) => fmt(v)} cursor={{ fill: "#EEE6DA" }} />
               <Bar dataKey="acos" radius={[0, 4, 4, 0]} maxBarSize={22}>
                 {approaches.map((a, i) => <Cell key={i} fill={MODEL_COLORS[a.kind] || "#A39A92"} />)}
-                <LabelList dataKey="acos" position="right" formatter={fmt} style={{ fontSize: 12, fill: "#2E2A27" }} />
+                <LabelList dataKey="acos" position="right" formatter={fmt} style={{ fontSize: 12, fill: "#2F2923" }} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -139,12 +132,12 @@ export default function Evaluation() {
         <Card title="Why quadruples are missed" subtitle="Flan-T5, all domains, seed 42">
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={errors} layout="vertical" margin={{ right: 40 }}>
-              <CartesianGrid horizontal={false} stroke="#EFE7DB" />
+              <CartesianGrid horizontal={false} stroke="#E6DCCD" />
               <XAxis type="number" {...AXIS} />
-              <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 12, fill: "#2E2A27" }} axisLine={false} tickLine={false} />
-              <Tooltip cursor={{ fill: "#F3EBDF" }} />
+              <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 12, fill: "#2F2923" }} axisLine={false} tickLine={false} />
+              <Tooltip cursor={{ fill: "#EEE6DA" }} />
               <Bar dataKey="value" fill={MODEL_COLORS.t5_domain} radius={[0, 4, 4, 0]} maxBarSize={20}>
-                <LabelList dataKey="value" position="right" style={{ fontSize: 12, fill: "#2E2A27" }} />
+                <LabelList dataKey="value" position="right" style={{ fontSize: 12, fill: "#2F2923" }} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -156,13 +149,13 @@ export default function Evaluation() {
         <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
           <ResponsiveContainer width="100%" height={classifiers.length * 44 + 60}>
             <BarChart data={classifiers} layout="vertical" barGap={2} margin={{ right: 40 }}>
-              <CartesianGrid horizontal={false} stroke="#EFE7DB" />
+              <CartesianGrid horizontal={false} stroke="#E6DCCD" />
               <XAxis type="number" {...AXIS} domain={[0, 1]} />
-              <YAxis type="category" dataKey="method" width={190} tick={{ fontSize: 12, fill: "#2E2A27" }} axisLine={false} tickLine={false} />
-              <Tooltip formatter={(v) => Number(v).toFixed(3)} cursor={{ fill: "#F3EBDF" }} />
+              <YAxis type="category" dataKey="method" width={190} tick={{ fontSize: 12, fill: "#2F2923" }} axisLine={false} tickLine={false} />
+              <Tooltip formatter={(v) => Number(v).toFixed(3)} cursor={{ fill: "#EEE6DA" }} />
               <Legend formatter={(v) => <span className="text-ink">{v === "macro_f1" ? "Macro-F1" : "Neutral F1"}</span>} wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="macro_f1" fill="#7B58A6" radius={[0, 4, 4, 0]} maxBarSize={14} />
-              <Bar dataKey="neutral_f1" fill="#BF8B1F" radius={[0, 4, 4, 0]} maxBarSize={14} />
+              <Bar dataKey="macro_f1" fill="#4757CF" radius={[0, 4, 4, 0]} maxBarSize={14} />
+              <Bar dataKey="neutral_f1" fill="#C0683F" radius={[0, 4, 4, 0]} maxBarSize={14} />
             </BarChart>
           </ResponsiveContainer>
           <table className="h-fit w-full border-collapse">
@@ -175,6 +168,42 @@ export default function Evaluation() {
         </div>
         <Takeaway>Class weights and focal loss are tied; balanced bagging and LLM-written Neutral data are significantly worse. Temperature scaling halves the calibration error, so the confidences shown in this app are honest.</Takeaway>
       </Card>
+
+      {data.constrained?.runs?.length > 0 && (
+        <Card title="Constrained decoding (no retraining)" subtitle="Flan-T5 may only write categories of the chosen domain; 3,583 test sentences, seed 42">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th>Model</th><th>Decoding</th>
+                  <th className="text-right">ACOS F1</th>
+                  <th className="text-right">Laptop ACOS F1</th>
+                  <th className="text-right">Laptop wrong-domain</th>
+                  <th className="text-right">All wrong-domain</th>
+                  <th className="text-right">ms / sentence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.constrained.runs.flatMap((r) => [
+                  { label: r.label, mode: "Unconstrained", m: r.unconstrained },
+                  { label: r.label, mode: "Constrained", m: r.constrained },
+                ]).map((row, i) => (
+                  <tr key={i}>
+                    <td className="font-semibold">{row.label}</td>
+                    <td>{row.mode}</td>
+                    <td className="text-right font-bold">{fmt(row.m.overall_acos_f1)}</td>
+                    <td className="text-right font-bold">{fmt(row.m.by_domain?.Laptop?.acos_f1)}</td>
+                    <td className="text-right">{fmt(row.m.by_domain?.Laptop?.wrong_domain_share)}%</td>
+                    <td className="text-right">{fmt(row.m.wrong_domain_share)}%</td>
+                    <td className="text-right">{fmt(row.m.ms_per_sentence)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Takeaway>Constraining helps the model trained without the domain (+3.1 ACOS F1, Laptop +9.5) but changes nothing for the deployed model, which already names the domain, and is about 10x slower. So the app leaves it off; the lab can switch it on.</Takeaway>
+        </Card>
+      )}
     </div>
   );
 }

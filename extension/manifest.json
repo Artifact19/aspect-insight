@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Aspect Insight",
+  "version": "2.0.0",
+  "description": "Reads the customer reviews on the open page and sends them to the Aspect Insight app running on this computer.",
+  "permissions": ["sidePanel", "tabs", "activeTab", "scripting"],
+  "host_permissions": ["http://127.0.0.1:8000/*", "http://*/*", "https://*/*"],
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "action": {
+    "default_title": "Aspect Insight: read the reviews on this page",
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [{ "matches": ["http://*/*", "https://*/*"], "js": ["content.js"], "run_at": "document_idle" }]
+}

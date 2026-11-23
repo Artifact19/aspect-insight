@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aspect Insight</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header class="top">
+    <img src="icons/icon48.png" alt="" class="logo" />
+    <div class="brand">
+      <div class="brand-name">Aspect Insight</div>
+      <div class="brand-tag">Reads the reviews on this page</div>
+    </div>
+    <span id="status" class="status"><i></i><span>Checking…</span></span>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="row">
+        <span id="site" class="chip">Web page</span>
+        <span id="found" class="muted small"></span>
+      </div>
+      <div id="page-title" class="page-title">Open a product, restaurant or hotel page</div>
+      <label class="field">
+        <span class="label">Kind of product</span>
+        <select id="domain">
+          <option>Laptop</option><option>Restaurant</option><option>Hotel</option><option>Clothing</option><option>Books</option>
+        </select>
+      </label>
+      <button id="read" class="btn btn-primary">Read the reviews</button>
+      <p id="hint" class="hint">Scroll down to the reviews first so the page loads them. You can also select review text and press the button.</p>
+      <div id="busy" class="busy hidden"><span class="spinner"></span><span id="busy-text">Reading…</span></div>
+      <div id="error" class="error hidden"></div>
+    </section>
+
+    <section id="result" class="card hidden">
+      <div class="label">What the reviews say</div>
+      <div id="meta" class="muted small"></div>
+      <div id="bar" class="bar"></div>
+      <div id="legend" class="legend"></div>
+      <div class="cols">
+        <div>
+          <div class="col-title pos">Loved</div>
+          <ul id="loved" class="topics"></ul>
+        </div>
+        <div>
+          <div class="col-title neg">Complaints</div>
+          <ul id="complaints" class="topics"></ul>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="mark" class="btn btn-ghost">Show on page</button>
+        <button id="open" class="btn btn-primary">Open full report</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>Runs on this computer. Reviews go only to the local app.</footer>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

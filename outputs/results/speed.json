@@ -1,0 +1,7 @@
+{
+  "ms_per_sentence": {
+    "Flan-T5 + domain": 34.7,
+    "Qwen2.5-1.5B LoRA + domain": 112.6
+  },
+  "note": "Mean over three seeds on the Colab A100 test run"
+}

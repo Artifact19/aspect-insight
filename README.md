@@ -61,18 +61,35 @@ books, clothing, hotels, laptops and restaurants).
 
 ## How it works
 
+```mermaid
+flowchart TD
+    E["① <b>Chrome extension</b><br/><i>live product page</i>"]
+    P["① <b>Pasted text</b><br/><i>or .txt / .csv</i>"]
+    D["① <b>Demo product</b><br/><i>simulated reviews</i>"]
+
+    E & P & D --> T5["② <b>Flan-T5-base</b> + domain<br/>writes every opinion as text"]
+    T5 -. "e.g." .-> EX(["[A] battery life [C] battery - operation performance<br/>[O] stellar [S] positive [SSEP] ..."])
+    T5 --> PA["③ <b>Parser</b><br/>text → (aspect, category, opinion, sentiment)"]
+    PA --> DB["④ <b>DeBERTa-v3-small</b><br/>re-checks each sentiment<br/><i>temperature-scaled confidence</i>"]
+    DB --> AG["⑤ <b>Aggregation in code</b><br/>topic counts, shares and quotes"]
+    AG --> QW["⑥ <b>Qwen2.5-1.5B-Instruct</b><br/>writes the brief or answer<br/>from the computed facts only"]
+    QW --> CK{{"⑦ <b>Checker</b><br/>every number found in the facts?"}}
+    CK -- "no: retry with sampling (up to 3 tries)" --> QW
+    CK -- "yes, or best try with misses flagged" --> OUT["<b>Report</b> · Q&amp;A · PDF / CSV"]
+
+    classDef input fill:#f3f0ea,stroke:#8a7f6a,color:#2b261c
+    classDef model fill:#eef0ff,stroke:#4a57d4,color:#1c1f4a
+    classDef code fill:#eef7f1,stroke:#3d8a5f,color:#173826
+    classDef out fill:#fff4e6,stroke:#c0782a,color:#4a2a08
+    classDef note fill:#f6f6f6,stroke:#bbb,color:#555,font-size:12px
+    class E,P,D input
+    class T5,DB,QW model
+    class PA,AG,CK code
+    class OUT out
+    class EX note
 ```
-reviews (extension / pasted / demo)
-   │
-   ▼
-Flan-T5-base + domain ─► "[A] battery life [C] battery - operation performance [O] stellar [S] positive [SSEP] ..."
-   │
-   ▼
-parser ─► quadruples ─► DeBERTa-v3-small sentiment check (temperature-scaled) ─► topic counts and quotes
-   │
-   ▼
-Qwen2.5-1.5B-Instruct writes the brief / answer from the counts ─► every number and claim is verified
-```
+
+<sub>Blue: neural models · Green: plain code · Qwen never reads the full set of reviews: it gets counts computed in code (plus up to 3 retrieved quotes when answering a question), so every figure it states can be checked.</sub>
 
 | Component | Model | Training |
 |---|---|---|
